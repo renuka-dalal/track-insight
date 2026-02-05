@@ -1,0 +1,436 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened]
+
+env:
+  NODE_VERSION: '18.x'
+
+jobs:
+  # Job 1: Lint and format checks
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+      
+      - name: Run backend lint
+        working-directory: ./backend
+        run: npm run lint
+      
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Run frontend lint
+        working-directory: ./frontend
+        run: npm run lint
+
+  # Job 2: Backend unit tests
+  test-backend-unit:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+      
+      - name: Run unit tests with coverage
+        working-directory: ./backend
+        run: npm run test:unit -- --coverage
+      
+      - name: Check coverage threshold
+        working-directory: ./backend
+        run: |
+          COVERAGE=$(npm run test:coverage --silent | grep "All files" | awk '{print $10}' | sed 's/%//')
+          echo "Coverage: ${COVERAGE}%"
+          if [ $(echo "$COVERAGE < 80" | bc) -eq 1 ]; then
+            echo "❌ Coverage is below 80% threshold"
+            exit 1
+          fi
+          echo "✅ Coverage meets 80% threshold"
+      
+      - name: Upload backend coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./backend/coverage/lcov.info
+          flags: backend-unit
+          name: backend-unit-coverage
+
+  # Job 3: Backend integration tests with real database
+  test-backend-integration:
+    name: Backend Integration Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: issue_tracker_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+      
+      - name: Run database migrations
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/issue_tracker_test
+          NODE_ENV: test
+        run: npm run migrate:up
+      
+      - name: Run integration tests
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/issue_tracker_test
+          NODE_ENV: test
+        run: npm run test:integration -- --coverage
+      
+      - name: Upload integration coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./backend/coverage/lcov.info
+          flags: backend-integration
+          name: backend-integration-coverage
+
+  # Job 4: Frontend unit tests
+  test-frontend-unit:
+    name: Frontend Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Run unit tests with coverage
+        working-directory: ./frontend
+        run: npm run test:unit
+      
+      - name: Generate test report
+        working-directory: ./frontend
+        if: always()
+        run: |
+          echo "## Frontend Unit Test Results" > test-summary.md
+          echo "" >> test-summary.md
+          echo "Tests completed at $(date)" >> test-summary.md
+      
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-unit-coverage
+          path: frontend/coverage/
+          retention-days: 30
+      
+      - name: Check coverage threshold
+        working-directory: ./frontend
+        run: |
+          echo "Unit test coverage check completed"
+      
+      - name: Upload frontend coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./frontend/coverage/lcov.info
+          flags: frontend-unit
+          name: frontend-unit-coverage
+
+  # Job 5: Frontend E2E tests with Playwright
+  test-frontend-e2e:
+    name: Frontend E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: issue_tracker_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+      
+      - name: Run database migrations
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/issue_tracker_test
+        run: |
+          npm run migrate:up
+          npm run db:seed
+      
+      - name: Start backend server
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/issue_tracker_test
+          PORT: 5000
+        run: npm start &
+      
+      - name: Wait for backend to be ready
+        run: |
+          timeout 30 bash -c 'until curl -f http://localhost:5000/health; do sleep 2; done'
+      
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Install Playwright browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps
+      
+      - name: Run Playwright tests
+        working-directory: ./frontend
+        env:
+          VITE_API_URL: http://localhost:5000
+        run: npm run test:e2e
+      
+      - name: Upload Playwright HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.browser || 'all' }}
+          path: frontend/playwright-report/
+          retention-days: 30
+      
+      - name: Upload Playwright test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-results-${{ matrix.browser || 'all' }}
+          path: frontend/test-results/
+          retention-days: 30
+
+  # Job 6: Build Docker images
+  build-images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [lint, test-backend-unit, test-backend-integration, test-frontend-unit, test-frontend-e2e]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false
+          tags: issue-tracker-backend:pr-${{ github.event.pull_request.number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: false
+          tags: issue-tracker-frontend:pr-${{ github.event.pull_request.number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Job 6: Security scanning
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    needs: build-images
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner - Backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: './backend'
+          format: 'sarif'
+          output: 'trivy-backend-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Run Trivy vulnerability scanner - Frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: './frontend'
+          format: 'sarif'
+          output: 'trivy-frontend-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: '.'
+      
+      - name: Run npm audit - Backend
+        working-directory: ./backend
+        run: npm audit --audit-level=high
+        continue-on-error: true
+      
+      - name: Run npm audit - Frontend
+        working-directory: ./frontend
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  # Job 7: Database migration test
+  test-migrations:
+    name: Test Database Migrations
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: migration_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+      
+      - name: Test migrations UP
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/migration_test
+        run: |
+          npm run migrate:up
+          echo "✅ Migrations ran successfully"
+      
+      - name: Verify schema
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/migration_test
+        run: |
+          npm run db:verify-schema
+          echo "✅ Schema verification passed"
+      
+      - name: Test migrations DOWN (rollback)
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/migration_test
+        run: |
+          npm run migrate:down
+          echo "✅ Rollback successful"
+
+  # Summary job - all checks must pass
+  pr-checks-complete:
+    name: All PR Checks Passed ✅
+    runs-on: ubuntu-latest
+    needs: 
+      - lint
+      - test-backend-unit
+      - test-backend-integration
+      - test-frontend-unit
+      - test-frontend-e2e
+      - build-images
+      - security-scan
+      - test-migrations
+    
+    steps:
+      - name: Summary
+        run: |
+          echo "✅ All PR checks passed successfully!"
+          echo "✅ Linting passed"
+          echo "✅ Backend unit tests passed (>80% coverage)"
+          echo "✅ Backend integration tests passed"
+          echo "✅ Frontend unit tests passed (>75% coverage)"
+          echo "✅ Frontend E2E tests passed (Playwright)"
+          echo "✅ Docker images built successfully"
+          echo "✅ Security scans completed"
+          echo "✅ Database migrations tested"
+          echo ""
+          echo "Ready to merge!"

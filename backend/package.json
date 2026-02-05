@@ -1,0 +1,74 @@
+{
+  "name": "issue-tracker-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Issue Tracker system",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --runInBand",
+    "test:unit": "jest --testPathPattern=unit --runInBand",
+    "test:integration": "jest --testPathPattern=integration --runInBand",
+    "test:coverage": "jest --coverage --runInBand",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.js tests/**/*.js",
+    "lint:fix": "eslint src/**/*.js tests/**/*.js --fix",
+    "migrate:up": "node scripts/migrate.js up",
+    "migrate:down": "node scripts/migrate.js down",
+    "migrate:create": "node scripts/migrate.js create",
+    "db:seed": "node scripts/seed.js",
+    "db:seed:realistic": "node scripts/seed-realistic.js",
+    "db:import:github": "node scripts/import-github-issues.js",
+    "db:reset": "npm run migrate:down && npm run migrate:up && npm run db:seed",
+    "db:reset:realistic": "npm run migrate:down && npm run migrate:up && npm run db:seed:realistic",
+    "db:verify-schema": "node scripts/verify-schema.js"
+  },
+  "keywords": [
+    "issue-tracker",
+    "rest-api",
+    "postgresql",
+    "devops"
+  ],
+  "author": "Renne",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "pg": "^8.11.3",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.55.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 75,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    },
+    "testTimeout": 10000
+  }
+}
