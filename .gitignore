@@ -1,0 +1,3 @@
+backend/coverage/*
+frontend/playwright-report/*
+frontend/test-results/*

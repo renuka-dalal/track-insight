@@ -21,7 +21,7 @@ async function createMigrationsTable() {
   `;
   
   await pool.query(query);
-  console.log('✅ Migrations table ready');
+  console.log('Migrations table ready');
 }
 
 async function getAppliedMigrations() {
@@ -56,10 +56,10 @@ async function applyMigration(filename) {
     );
     
     await client.query('COMMIT');
-    console.log(`✅ Applied: ${filename}`);
+    console.log(`Applied: ${filename}`);
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error(`❌ Failed to apply ${filename}:`, error.message);
+    console.error(` Failed to apply ${filename}:`, error.message);
     throw error;
   } finally {
     client.release();
@@ -71,7 +71,7 @@ async function rollbackMigration(filename) {
   const filepath = path.join(MIGRATIONS_DIR, downFile);
   
   if (!fs.existsSync(filepath)) {
-    console.error(`❌ Rollback file not found: ${downFile}`);
+    console.error(` Rollback file not found: ${downFile}`);
     return;
   }
   
@@ -90,10 +90,10 @@ async function rollbackMigration(filename) {
     );
     
     await client.query('COMMIT');
-    console.log(`✅ Rolled back: ${filename}`);
+    console.log(`Rolled back: ${filename}`);
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error(`❌ Failed to rollback ${filename}:`, error.message);
+    console.error(` Failed to rollback ${filename}:`, error.message);
     throw error;
   } finally {
     client.release();
@@ -110,7 +110,7 @@ async function migrateUp() {
     const pending = available.filter(m => !applied.includes(m));
     
     if (pending.length === 0) {
-      console.log('✅ No pending migrations');
+      console.log('No pending migrations');
       return;
     }
     
@@ -120,9 +120,9 @@ async function migrateUp() {
       await applyMigration(migration);
     }
     
-    console.log('✅ All migrations applied successfully');
+    console.log('All migrations applied successfully');
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    console.error(' Migration failed:', error);
     process.exit(1);
   }
 }
@@ -134,7 +134,7 @@ async function migrateDown() {
     const applied = await getAppliedMigrations();
     
     if (applied.length === 0) {
-      console.log('✅ No migrations to rollback');
+      console.log('No migrations to rollback');
       return;
     }
     
@@ -142,9 +142,9 @@ async function migrateDown() {
     console.log(`Rolling back: ${lastMigration}`);
     
     await rollbackMigration(lastMigration);
-    console.log('✅ Rollback completed');
+    console.log('Rollback completed');
   } catch (error) {
-    console.error('❌ Rollback failed:', error);
+    console.error(' Rollback failed:', error);
     process.exit(1);
   }
 }

@@ -75,7 +75,7 @@ async function importIssues(owner, repo, limit = 30) {
   try {
     await client.query('BEGIN');
     
-    console.log(`📥 Importing issues from ${owner}/${repo}...`);
+    console.log(`Importing issues from ${owner}/${repo}...`);
     
     if (!GITHUB_TOKEN) {
       console.warn('⚠️  No GITHUB_TOKEN provided. Rate limit: 60 requests/hour');
@@ -147,11 +147,11 @@ async function importIssues(owner, repo, limit = 30) {
     
     await client.query('COMMIT');
     
-    console.log(`✅ Successfully imported ${imported} issues from ${owner}/${repo}`);
+    console.log(`Successfully imported ${imported} issues from ${owner}/${repo}`);
     
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('❌ Import failed:', error);
+    console.error(' Import failed:', error);
     throw error;
   } finally {
     client.release();
@@ -185,7 +185,7 @@ if (require.main === module) {
   const limit = limitStr ? parseInt(limitStr) : 30;
   
   if (!owner || !repo) {
-    console.error('❌ Invalid format. Use: owner/repo');
+    console.error(' Invalid format. Use: owner/repo');
     process.exit(1);
   }
   
