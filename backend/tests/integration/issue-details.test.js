@@ -1,5 +1,5 @@
 const request = require('supertest');
-const { app, pool } = require('../src/server');
+const { app, pool } = require('../../src/server');
 
 describe('Issue Details and Comments API', () => {
   let testIssueId;

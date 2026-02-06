@@ -18,13 +18,13 @@ async function seed() {
     
     await pool.query(sql);
     
-    console.log('✅ Realistic data seeded successfully!');
+    console.log('Realistic data seeded successfully!');
     console.log('   Users: 10');
     console.log('   Issues: 22');
     console.log('   Comments: 40+');
     console.log('   Labels: 8');
   } catch (error) {
-    console.error('❌ Seeding failed:', error);
+    console.error(' Seeding failed:', error);
     process.exit(1);
   } finally {
     await pool.end();

@@ -18,9 +18,9 @@ async function seed() {
     
     await pool.query(sql);
     
-    console.log('✅ Database seeded successfully');
+    console.log('Database seeded successfully');
   } catch (error) {
-    console.error('❌ Seeding failed:', error);
+    console.error(' Seeding failed:', error);
     process.exit(1);
   } finally {
     await pool.end();

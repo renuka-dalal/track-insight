@@ -26,7 +26,7 @@ async function verifySchema() {
         throw new Error(`Table '${table}' does not exist`);
       }
       
-      console.log(`✅ Table '${table}' exists`);
+      console.log(`Table '${table}' exists`);
     }
     
     // Verify critical columns
@@ -48,7 +48,7 @@ async function verifySchema() {
         throw new Error(`Column '${check.column}' does not exist in table '${check.table}'`);
       }
       
-      console.log(`✅ Column '${check.table}.${check.column}' exists`);
+      console.log(`Column '${check.table}.${check.column}' exists`);
     }
     
     // Check for indexes
@@ -58,12 +58,12 @@ async function verifySchema() {
       WHERE tablename IN ('issues', 'users', 'comments')
     `);
     
-    console.log(`✅ Found ${indexResult.rows.length} indexes`);
+    console.log(`Found ${indexResult.rows.length} indexes`);
     
-    console.log('✅ Schema verification passed');
+    console.log('Schema verification passed');
     process.exit(0);
   } catch (error) {
-    console.error('❌ Schema verification failed:', error.message);
+    console.error(' Schema verification failed:', error.message);
     process.exit(1);
   } finally {
     await pool.end();
