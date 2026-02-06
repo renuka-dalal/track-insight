@@ -8,7 +8,7 @@
     "dev": "nodemon src/server.js",
     "test": "jest --runInBand",
     "test:setup": "node scripts/setup-test-db.js",
-    "test:unit": "jest --testPathPattern=unit --runInBand",
+    "test:unit": "jest --testPathPattern=unit --runInBand --forceExit",
     "test:integration": "jest --testPathPattern=integration --runInBand",
     "test:coverage": "jest --coverage --runInBand",
     "test:watch": "jest --watch",
