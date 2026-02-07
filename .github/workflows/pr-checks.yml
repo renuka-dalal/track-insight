@@ -135,7 +135,7 @@ jobs:
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
           NODE_ENV: test
-        run: npm run test:integration -- --coverage
+        run: npm run test:integration
       
       - name: Upload integration coverage
         uses: codecov/codecov-action@v4
