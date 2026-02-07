@@ -1,0 +1,97 @@
+name: Code Sanity Check
+
+on:
+  push:
+    branches:
+      - '**'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+
+env:
+  NODE_VERSION: '18.x'
+  DATABASE_URL: postgresql://testuser:testpass@localhost:5432/issue_tracker_test
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Lint Backend
+        working-directory: ./backend
+        run: |
+          npm ci
+          npm run lint
+
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+      
+      - name: Unit Tests
+        working-directory: ./backend
+        run: npm run test:unit
+      
+      - name: Setup Database
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: |
+          npm run migrate:up
+          npm run db:seed
+      
+      - name: Integration Tests
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          NODE_ENV: test
+        run: npm run test:integration
+
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Unit Tests
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run test:unit
+
+  summary:
+    name: Sanity Check Complete
+    runs-on: ubuntu-latest
+    needs: [lint, backend-tests, frontend-tests]
+    steps:
+      - run: echo "All sanity checks passed!"
