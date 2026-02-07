@@ -9,7 +9,7 @@
     "test": "jest --runInBand",
     "test:setup": "node scripts/setup-test-db.js",
     "test:unit": "jest --testPathPattern=unit --runInBand",
-    "test:integration": "jest --testPathPattern=integration --runInBand --forceExit",
+    "test:integration": "jest --testPathPattern=integration --runInBand",
     "test:coverage": "jest --coverage --runInBand",
     "test:watch": "jest --watch",
     "lint": "eslint src/**/*.js tests/**/*.js",
