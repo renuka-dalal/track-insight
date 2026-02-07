@@ -453,9 +453,9 @@ if (process.env.NODE_ENV !== 'test') {
 // Only start server if not in test mode
 if (process.env.NODE_ENV !== 'test') {
   server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Issue Tracker API running on port ${PORT}`);
-    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔍 Health check: http://localhost:${PORT}/health`);
+    console.log(`Issue Tracker API running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
   });
 }
 

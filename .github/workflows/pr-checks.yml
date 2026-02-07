@@ -247,7 +247,7 @@ jobs:
         run: |
           echo "Waiting for backend..."
           timeout 30 bash -c 'until curl -f http://localhost:5000/health 2>/dev/null; do sleep 2; echo "Retrying..."; done' || exit 1
-          echo "✅ Backend is ready"
+          echo "Backend is ready"
       
       - name: Install frontend dependencies
         working-directory: ./frontend
@@ -313,7 +313,7 @@ jobs:
       
       - name: Check image sizes
         run: |
-          echo "✅ Docker images built successfully"
+          echo "Docker images built successfully"
           echo "Backend image: issue-tracker-backend:pr-${{ github.event.pull_request.number }}"
           echo "Frontend image: issue-tracker-frontend:pr-${{ github.event.pull_request.number }}"
 
@@ -399,7 +399,7 @@ jobs:
           DATABASE_URL: postgresql://testuser:testpass@localhost:5432/migration_test
         run: |
           npm run migrate:up
-          echo "✅ Migrations ran successfully"
+          echo "Migrations ran successfully"
       
       - name: Verify schema
         working-directory: ./backend
@@ -414,7 +414,7 @@ jobs:
           DATABASE_URL: postgresql://testuser:testpass@localhost:5432/migration_test
         run: |
           npm run migrate:down
-          echo "✅ Rollback successful"
+          echo "Rollback successful"
 
   # Summary job - all checks must pass
   pr-checks-complete:
@@ -433,16 +433,16 @@ jobs:
     steps:
       - name: Summary
         run: |
-          echo "✅ All PR checks passed successfully!"
+          echo "All PR checks passed successfully!"
           echo ""
-          echo "📋 Completed Checks:"
-          echo "  ✅ Linting passed"
-          echo "  ✅ Backend unit tests passed"
-          echo "  ✅ Backend integration tests passed"
-          echo "  ✅ Frontend unit tests passed"
-          echo "  ✅ Frontend E2E tests passed (Playwright)"
-          echo "  ✅ Docker images built successfully"
-          echo "  ✅ Security scans completed"
-          echo "  ✅ Database migrations tested"
+          echo "Completed Checks:"
+          echo "  1. Linting passed"
+          echo "  2. Backend unit tests passed"
+          echo "  3. Backend integration tests passed"
+          echo "  4. Frontend unit tests passed"
+          echo "  5. Frontend E2E tests passed (Playwright)"
+          echo "  6. Docker images built successfully"
+          echo "  7. Security scans completed"
+          echo "  8. Database migrations tested"
           echo ""
-          echo "🚀 Ready to merge!"
+          echo "Ready to merge!"
