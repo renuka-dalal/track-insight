@@ -60,4 +60,4 @@ bug:
 
 #Features
 enhancement:
-  - head-branch: ['^feature/', 'feat/', 'enhancement/']
+  - head-branch: ['feature/*','^feature/', 'feat/', 'enhancement/']
