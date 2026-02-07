@@ -1,0 +1,63 @@
+# Backend changes
+backend:
+  - changed-files:
+    - any-glob-to-any-file: 'backend/**/*'
+
+# Frontend changes
+frontend:
+  - changed-files:
+    - any-glob-to-any-file: 'frontend/**/*'
+
+# Documentation
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: 
+      - '*.md'
+      - 'docs/**/*.md'
+      - '**/README.md'
+
+# CI/CD workflows
+ci-cd:
+  - changed-files:
+    - any-glob-to-any-file: '.github/workflows/**/*'
+
+# Database migrations
+database:
+  - changed-files:
+    - any-glob-to-any-file: 'backend/migrations/**/*'
+
+# Tests
+tests:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'backend/tests/**/*'
+      - 'frontend/tests/**/*'
+      - '**/*.test.js'
+      - '**/*.spec.js'
+
+# Dependencies
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'backend/package.json'
+      - 'frontend/package.json'
+      - '**/package-lock.json'
+
+# Docker
+docker:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Dockerfile*'
+      - 'docker-compose*.yml'
+      - '.dockerignore'
+#Bugs
+bug:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'backend/tests/**/*'
+      - 'frontend/tests/**/*'
+  - head-branch: ['^fix/', 'fix-', 'bugfix/']
+
+#Features
+enhancement:
+  - head-branch: ['^feature/', 'feat/', 'enhancement/']
