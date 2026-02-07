@@ -405,7 +405,7 @@ app.use((req, res) => {
 });
 
 // Error handler
-app.use((err, req, res, next) => {
+app.use((err, req, res,) => {
   console.error('Unhandled error:', err);
   res.status(500).json({
     success: false,
@@ -413,31 +413,50 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Graceful shutdown
+// ===== SERVER STARTUP AND GRACEFUL SHUTDOWN =====
+
+// Declare server variable in outer scope
+let server;
+
+// Graceful shutdown handler
 const gracefulShutdown = () => {
-  console.log('Received shutdown signal, closing server gracefully...');
+  console.log('🛑 Received shutdown signal, closing server gracefully...');
   
-  server.close(() => {
-    console.log('HTTP server closed');
+  if (server) {
+    server.close(() => {
+      console.log('✅ HTTP server closed');
+      pool.end(() => {
+        console.log('✅ Database pool closed');
+        process.exit(0);
+      });
+    });
+  } else {
+    // In test mode, just close pool
     pool.end(() => {
-      console.log('Database pool closed');
+      console.log('✅ Database pool closed');
       process.exit(0);
     });
-  });
+  }
 
   setTimeout(() => {
-    console.error('Forced shutdown after timeout');
+    console.error('⚠️  Forced shutdown after timeout');
     process.exit(1);
   }, 10000);
 };
 
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
+// Only register shutdown handlers in non-test environments
+if (process.env.NODE_ENV !== 'test') {
+  process.on('SIGTERM', gracefulShutdown);
+  process.on('SIGINT', gracefulShutdown);
+}
 
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Issue Tracker API running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-});
+// Only start server if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Issue Tracker API running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+  });
+}
 
-module.exports = { app, pool };
+module.exports = { app, pool, server };

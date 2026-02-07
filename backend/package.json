@@ -23,7 +23,7 @@
     "db:reset": "npm run migrate:down && npm run migrate:up && npm run db:seed",
     "db:reset:realistic": "npm run migrate:down && npm run migrate:up && npm run db:seed:realistic",
     "db:verify-schema": "node scripts/verify-schema.js",
-    "db:seed:test": "node scripts/seed-test-data.js"
+    "db:seed:test": "node scripts/seed.js"
   },
   "keywords": [
     "issue-tracker",

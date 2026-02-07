@@ -4,8 +4,7 @@ const { app, pool } = require('../../src/server');
 describe('Issue Details and Comments API', () => {
   let testIssueId;
   let testUserId;
-  let testCommentId;
-
+  
   beforeAll(async () => {
     // Create a test user
     const userResult = await pool.query(
@@ -35,6 +34,8 @@ describe('Issue Details and Comments API', () => {
     if (testUserId) {
       await pool.query('DELETE FROM users WHERE id = $1', [testUserId]);
     }
+    
+    await pool.end();
   });
 
   describe('GET /api/issues/:id - Issue Details', () => {
@@ -93,7 +94,7 @@ describe('Issue Details and Comments API', () => {
       expect(response.body.data.content).toBe(comment.content);
       expect(response.body.data.issue_id).toBe(testIssueId);
       
-      testCommentId = response.body.data.id;
+      //testCommentId = response.body.data.id;
     });
 
     test('should require content when adding comment', async () => {
