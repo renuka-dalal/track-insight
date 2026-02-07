@@ -8,8 +8,8 @@
     "dev": "nodemon src/server.js",
     "test": "jest --runInBand",
     "test:setup": "node scripts/setup-test-db.js",
-    "test:unit": "jest --testPathPattern=unit --runInBand --forceExit",
-    "test:integration": "jest --testPathPattern=integration --runInBand",
+    "test:unit": "jest --testPathPattern=unit --runInBand",
+    "test:integration": "jest --testPathPattern=integration --runInBand --forceExit",
     "test:coverage": "jest --coverage --runInBand",
     "test:watch": "jest --watch",
     "lint": "eslint src/**/*.js tests/**/*.js",
@@ -23,7 +23,7 @@
     "db:reset": "npm run migrate:down && npm run migrate:up && npm run db:seed",
     "db:reset:realistic": "npm run migrate:down && npm run migrate:up && npm run db:seed:realistic",
     "db:verify-schema": "node scripts/verify-schema.js",
-    "db:seed:test": "node scripts/seed-test-data.js"
+    "db:seed:test": "node scripts/seed.js"
   },
   "keywords": [
     "issue-tracker",

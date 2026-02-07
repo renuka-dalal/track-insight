@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [main, develop]
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 env:
   NODE_VERSION: '18.x'
@@ -64,11 +65,11 @@ jobs:
         working-directory: ./backend
         run: npm ci
       
-      - name: Run unit tests with coverage
+      - name: Run unit tests
         working-directory: ./backend
         env:
           NODE_ENV: test
-        run: npm run test:unit -- --coverage
+        run: npm run test:unit
       
       - name: Upload backend unit coverage
         uses: codecov/codecov-action@v4
