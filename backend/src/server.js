@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { Pool } = require('pg');
+const createAIChatRouter = require('./routes/ai-chat');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -37,6 +38,9 @@ app.use((req, res, next) => {
   res.setHeader('X-Request-ID', req.requestId);
   next();
 });
+
+//AI Chat Service
+ app.use('/api/ai', createAIChatRouter(pool));
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
