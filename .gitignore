@@ -3,3 +3,5 @@ frontend/playwright-report/*
 frontend/test-results/*
 frontend/node_modules
 backend/node_modules
+backend/.env
+backend/.env.test
