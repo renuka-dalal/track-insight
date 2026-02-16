@@ -12,7 +12,7 @@
             </svg>
           </div>
           <div class="brand-text">
-            <h1>Ticket Insight</h1>
+            <h1>Track Insight</h1>
             <p>AI-powered ticket intelligence</p>
           </div>
         </div>
@@ -228,7 +228,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue';
+import { ref, nextTick, onMounted, onActivated } from 'vue';
 import { marked } from 'marked';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -245,7 +245,7 @@ const stats = ref({});
 
 const suggestedQueries = [
   'Show me all critical issues',
-  'What issues are assigned to me?',
+  'How many issues were resolved?',
   'Show open bugs',
   'What was created this week?',
   'Show in-progress features',
@@ -263,10 +263,15 @@ const quickSuggestions = [
 
 async function fetchStats() {
   try {
-    const response = await fetch(`${API_URL}/api/stats`);
+    // Force fresh fetch with cache-busting
+    const response = await fetch(`${API_URL}/api/stats?_t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' }
+    });
     const data = await response.json();
     if (data.success) {
       stats.value = data.data;
+      console.log('AIAssistant stats refreshed:', stats.value);
     }
   } catch (error) {
     console.error('Error fetching stats:', error);
@@ -363,7 +368,7 @@ function scrollToBottom() {
 }
 
 function openIssue(issueId) {
-  window.location.href = `/#/dashboard?issue=${issueId}`;
+  window.location.href = `/dashboard?issue=${issueId}`;
 }
 
 onMounted(() => {

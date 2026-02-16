@@ -258,9 +258,10 @@ function scrollToBottom() {
   });
 }
 
-// Open issue in new tab
+// Navigate to dashboard and open issue modal
 function openIssue(issueId) {
-  window.open(`/#/issues/${issueId}`, '_blank');
+  // Use router to navigate to dashboard with issue query param
+  window.location.hash = `/dashboard?issue=${issueId}`;
 }
 
 // Watch for new messages
@@ -281,7 +282,7 @@ watch(() => messages.value.length, () => {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   border: none;
   color: white;
   cursor: pointer;
@@ -302,7 +303,7 @@ watch(() => messages.value.length, () => {
   position: absolute;
   top: -5px;
   right: -5px;
-  background: #ef4444;
+  background: var(--danger);
   color: white;
   border-radius: 50%;
   width: 24px;
@@ -317,7 +318,7 @@ watch(() => messages.value.length, () => {
 .chat-window {
   width: 400px;
   height: 600px;
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   display: flex;
@@ -326,7 +327,7 @@ watch(() => messages.value.length, () => {
 }
 
 .chat-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   color: white;
   padding: 16px 20px;
   display: flex;
@@ -370,7 +371,7 @@ watch(() => messages.value.length, () => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #10b981;
+  background: var(--success);
   animation: pulse 2s infinite;
 }
 
@@ -397,7 +398,7 @@ watch(() => messages.value.length, () => {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
-  background: #f9fafb;
+  background: var(--bg-primary);
 }
 
 .welcome-message {
@@ -409,7 +410,7 @@ watch(() => messages.value.length, () => {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -420,17 +421,17 @@ watch(() => messages.value.length, () => {
 .welcome-message h4 {
   margin: 0 0 12px;
   font-size: 20px;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .welcome-message p {
-  color: #6b7280;
+  color: var(--text-muted);
   margin: 0 0 12px;
 }
 
 .welcome-message ul {
   text-align: left;
-  color: #6b7280;
+  color: var(--text-muted);
   margin: 0 0 24px;
   padding-left: 20px;
 }
@@ -442,8 +443,8 @@ watch(() => messages.value.length, () => {
 }
 
 .quick-actions button {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
   padding: 12px;
   border-radius: 8px;
   cursor: pointer;
@@ -453,8 +454,8 @@ watch(() => messages.value.length, () => {
 }
 
 .quick-actions button:hover {
-  background: #f9fafb;
-  border-color: #667eea;
+  background: var(--bg-primary);
+  border-color: var(--accent-primary);
   transform: translateY(-1px);
 }
 
@@ -484,7 +485,7 @@ watch(() => messages.value.length, () => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -493,7 +494,7 @@ watch(() => messages.value.length, () => {
 }
 
 .message.user .message-avatar {
-  background: #10b981;
+  background: var(--success);
 }
 
 .message-content {
@@ -502,17 +503,17 @@ watch(() => messages.value.length, () => {
 }
 
 .message-text {
-  background: white;
+  background: var(--bg-tertiary);
   padding: 12px 16px;
   border-radius: 12px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   font-size: 14px;
   line-height: 1.6;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .message.user .message-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   color: white;
 }
 
@@ -531,7 +532,7 @@ watch(() => messages.value.length, () => {
 }
 
 .message-text :deep(code) {
-  background: #f3f4f6;
+  background: var(--bg-primary);
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 13px;
@@ -540,12 +541,12 @@ watch(() => messages.value.length, () => {
 
 .message-text :deep(strong) {
   font-weight: 600;
-  color: #667eea;
+  color: var(--accent-primary);
 }
 
 .message-time {
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--text-dimmed);
   margin-top: 4px;
   padding: 0 4px;
 }
@@ -557,13 +558,13 @@ watch(() => messages.value.length, () => {
 .related-issues p {
   font-size: 12px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-muted);
   margin: 0 0 8px;
 }
 
 .issue-chip {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
   border-radius: 8px;
   padding: 8px 12px;
   margin-bottom: 6px;
@@ -576,19 +577,19 @@ watch(() => messages.value.length, () => {
 }
 
 .issue-chip:hover {
-  border-color: #667eea;
+  border-color: var(--accent-primary);
   transform: translateX(4px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .issue-id {
   font-weight: 600;
-  color: #667eea;
+  color: var(--accent-primary);
 }
 
 .issue-title {
   flex: 1;
-  color: #374151;
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -603,23 +604,23 @@ watch(() => messages.value.length, () => {
 }
 
 .issue-priority.critical {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(239,68,68,0.15);
+  color: var(--danger);
 }
 
 .issue-priority.high {
-  background: #fed7aa;
-  color: #9a3412;
+  background: rgba(251,146,60,0.15);
+  color: #fb923c;
 }
 
 .issue-priority.medium {
-  background: #fef3c7;
-  color: #92400e;
+  background: rgba(251,191,36,0.15);
+  color: var(--warning);
 }
 
 .issue-priority.low {
-  background: #dbeafe;
-  color: #1e40af;
+  background: rgba(59,130,246,0.15);
+  color: var(--info);
 }
 
 .typing-indicator {
@@ -632,7 +633,7 @@ watch(() => messages.value.length, () => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #9ca3af;
+  background: var(--text-dimmed);
   animation: typing 1.4s infinite;
 }
 
@@ -655,8 +656,8 @@ watch(() => messages.value.length, () => {
 
 .chat-input {
   padding: 16px 20px;
-  background: white;
-  border-top: 1px solid #e5e7eb;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-secondary);
   display: flex;
   gap: 12px;
   align-items: flex-end;
@@ -664,11 +665,13 @@ watch(() => messages.value.length, () => {
 
 .chat-input textarea {
   flex: 1;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-secondary);
   border-radius: 8px;
   padding: 12px;
   font-size: 14px;
   font-family: inherit;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   resize: none;
   max-height: 120px;
   transition: border-color 0.2s;
@@ -676,14 +679,14 @@ watch(() => messages.value.length, () => {
 
 .chat-input textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--accent-primary);
 }
 
 .send-btn {
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
   border: none;
   color: white;
   cursor: pointer;
