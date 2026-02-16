@@ -13,8 +13,47 @@ class AIChatService {
   /**
    * Get relevant issues based on query
    */
-  async searchIssues(query) {
+  async searchIssues(query, filters = {}) {
     try {
+      let whereConditions = [];
+      let params = [];
+      let paramIndex = 1;
+
+      // Handle status filter
+      if (filters.status) {
+        whereConditions.push(`i.status = $${paramIndex}`);
+        params.push(filters.status);
+        paramIndex++;
+      }
+
+      // Handle priority filter
+      if (filters.priority) {
+        whereConditions.push(`i.priority = $${paramIndex}`);
+        params.push(filters.priority);
+        paramIndex++;
+      }
+
+      // Handle assignee filter
+      if (filters.assignee) {
+        whereConditions.push(`assignee.username ILIKE $${paramIndex}`);
+        params.push(`%${filters.assignee}%`);
+        paramIndex++;
+      }
+
+      // Handle text search if query provided
+      if (query) {
+        whereConditions.push(`(
+          i.title ILIKE $${paramIndex} OR 
+          i.description ILIKE $${paramIndex}
+        )`);
+        params.push(`%${query}%`);
+        paramIndex++;
+      }
+
+      const whereClause = whereConditions.length > 0 
+        ? 'WHERE ' + whereConditions.join(' AND ')
+        : '';
+
       const result = await this.pool.query(`
         SELECT 
           i.*,
@@ -34,11 +73,7 @@ class AIChatService {
         LEFT JOIN comments c ON i.id = c.issue_id
         LEFT JOIN issue_labels il ON i.id = il.issue_id
         LEFT JOIN labels l ON il.label_id = l.id
-        WHERE 
-          i.title ILIKE $1 OR 
-          i.description ILIKE $1 OR
-          i.status ILIKE $1 OR
-          i.priority ILIKE $1
+        ${whereClause}
         GROUP BY 
           i.id, 
           reporter.username, 
@@ -46,9 +81,9 @@ class AIChatService {
           assignee.username, 
           assignee.full_name
         ORDER BY 
-          i.created_at DESC
-        LIMIT 20
-      `, [`%${query}%`]);
+          i.updated_at DESC
+        LIMIT 50
+      `, params);
 
       return result.rows;
     } catch (error) {
@@ -68,6 +103,7 @@ class AIChatService {
           COUNT(*) FILTER (WHERE status = 'open') as open,
           COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress,
           COUNT(*) FILTER (WHERE status = 'closed') as closed,
+          COUNT(*) FILTER (WHERE status = 'resolved') as resolved,
           COUNT(*) FILTER (WHERE priority = 'critical') as critical,
           COUNT(*) FILTER (WHERE priority = 'high') as high_priority,
           COUNT(*) FILTER (WHERE priority = 'medium') as medium_priority,
@@ -110,6 +146,46 @@ class AIChatService {
       return [];
     }
   }
+  /**
+   * Get a single issue by ID
+   */
+  async getIssueById(issueId) {
+    try {
+      const result = await this.pool.query(`
+        SELECT 
+          i.*,
+          reporter.username as reporter_username,
+          reporter.full_name as reporter_name,
+          assignee.username as assignee_username,
+          assignee.full_name as assignee_name,
+          COUNT(DISTINCT c.id) as comment_count,
+          json_agg(DISTINCT jsonb_build_object(
+            'id', l.id, 
+            'name', l.name, 
+            'color', l.color
+          )) FILTER (WHERE l.id IS NOT NULL) as labels
+        FROM issues i
+        LEFT JOIN users reporter ON i.reporter_id = reporter.id
+        LEFT JOIN users assignee ON i.assignee_id = assignee.id
+        LEFT JOIN comments c ON i.id = c.issue_id
+        LEFT JOIN issue_labels il ON i.id = il.issue_id
+        LEFT JOIN labels l ON il.label_id = l.id
+        WHERE i.id = $1
+        GROUP BY 
+          i.id, 
+          reporter.username, 
+          reporter.full_name, 
+          assignee.username, 
+          assignee.full_name
+      `, [issueId]);
+
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error fetching issue by ID:', error);
+      return null;
+    }
+  }
+
 
   /**
    * Main chat function
@@ -127,6 +203,7 @@ class AIChatService {
 - Total Issues: ${summary.total}
 - Open: ${summary.open}
 - In Progress: ${summary.in_progress}
+- Resolved: ${summary.resolved}
 - Closed: ${summary.closed}
 - Critical Priority: ${summary.critical}
 - High Priority: ${summary.high_priority}
@@ -160,19 +237,39 @@ ${recentIssues.map(issue => {
 - Use **bold** for issue IDs like **#123**
 - Keep responses under 300 words unless user asks for details`;
 
-      // Check if we need to search for specific issues
-      let issueContext = '';
-      const searchTerms = this.extractSearchTerms(userMessage);
+      // Extract search criteria from message
+      const searchCriteria = this.extractSearchCriteria(userMessage);
       let relevantIssues = [];
       
-      if (searchTerms.length > 0) {
-        relevantIssues = await this.searchIssues(searchTerms.join(' '));
-        
-        if (relevantIssues.length > 0) {
-          issueContext = `\n\n**Relevant Issues Found:**\n${relevantIssues.map(issue => 
-            `- **#${issue.id}**: ${issue.title}\n  Status: ${issue.status} | Priority: ${issue.priority} | Assignee: ${issue.assignee_username || 'Unassigned'}\n  Description: ${issue.description?.substring(0, 150)}...`
-          ).join('\n\n')}`;
+      if (searchCriteria.needsSearch) {
+        // Handle specific issue ID query
+        if (searchCriteria.issueId) {
+          const singleIssue = await this.getIssueById(searchCriteria.issueId);
+          if (singleIssue) {
+            relevantIssues = [singleIssue];
+            console.log(`Found issue #${searchCriteria.issueId}:`, singleIssue.title);
+          } else {
+            console.log(`Issue #${searchCriteria.issueId} not found`);
+          }
+        } else {
+          // General search
+          relevantIssues = await this.searchIssues(
+            searchCriteria.query,
+            searchCriteria.filters
+          );
+          console.log(`Found ${relevantIssues.length} issues matching criteria:`, searchCriteria);
         }
+      }
+
+      // Build issue context for the AI
+      let issueContext = '';
+      if (relevantIssues.length > 0) {
+        issueContext = `\n\n**Relevant Issues Found (${relevantIssues.length} total):**\n${relevantIssues.map(issue => 
+          `- **#${issue.id}**: ${issue.title}
+  Status: ${issue.status} | Priority: ${issue.priority} | Assignee: ${issue.assignee_username || 'Unassigned'}
+  Created: ${new Date(issue.created_at).toLocaleDateString()} | Updated: ${new Date(issue.updated_at).toLocaleDateString()}
+  Description: ${issue.description?.substring(0, 100)}...`
+        ).join('\n\n')}`;
       }
 
       // Build messages array for OpenAI
@@ -190,7 +287,7 @@ ${recentIssues.map(issue => {
 
       // Call OpenAI API
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',  // Fast and cheap (~15x cheaper than GPT-4)
+        model: 'gpt-4o-mini',
         messages: messages,
         max_tokens: 2048,
         temperature: 0.7,
@@ -217,28 +314,94 @@ ${recentIssues.map(issue => {
   }
 
   /**
-   * Extract search terms from user message
+   * Extract search criteria from user message - IMPROVED VERSION
    */
-  extractSearchTerms(message) {
-    const terms = [];
-    
-    // Extract issue IDs (#123)
-    const issueIds = message.match(/#(\d+)/g);
-    if (issueIds) {
-      terms.push(...issueIds.map(id => id.replace('#', '')));
+  extractSearchCriteria(message) {
+    const lowerMessage = message.toLowerCase();
+    const criteria = {
+      needsSearch: false,
+      query: null,
+      filters: {},
+      issueId: null  // Track if user asks about a specific issue by ID
+    };
+
+    // Check for specific issue IDs first (#21, #123, etc.)
+    const issueIdMatch = message.match(/#(\d+)/);
+    if (issueIdMatch) {
+      criteria.issueId = parseInt(issueIdMatch[1], 10);
+      criteria.needsSearch = true;
     }
-    
-    // Extract keywords
-    const keywords = ['login', 'authentication', 'database', 'API', 'frontend', 'backend', 
-                     'critical', 'urgent', 'bug', 'error', 'crash', 'performance', 'security'];
-    
-    keywords.forEach(keyword => {
-      if (message.toLowerCase().includes(keyword.toLowerCase())) {
-        terms.push(keyword);
+
+    // Check for status keywords
+    const statusKeywords = {
+      'open': 'open',
+      'in progress': 'in_progress',
+      'resolved': 'resolved',
+      'closed': 'closed',
+      'blocked': 'blocked'
+    };
+
+    for (const [keyword, status] of Object.entries(statusKeywords)) {
+      if (lowerMessage.includes(keyword)) {
+        criteria.filters.status = status;
+        criteria.needsSearch = true;
+        break;
       }
-    });
+    }
+
+    // Check for priority keywords
+    const priorityKeywords = {
+      'critical': 'critical',
+      'urgent': 'critical',
+      'high priority': 'high',
+      'high': 'high',
+      'medium priority': 'medium',
+      'medium': 'medium',
+      'low priority': 'low',
+      'low': 'low'
+    };
+
+    for (const [keyword, priority] of Object.entries(priorityKeywords)) {
+      if (lowerMessage.includes(keyword)) {
+        criteria.filters.priority = priority;
+        criteria.needsSearch = true;
+        break;
+      }
+    }
+
+    // Check for assignee mentions
+    if (lowerMessage.includes('assigned to') || lowerMessage.includes('my issues')) {
+      const assigneeMatch = message.match(/assigned to (\w+)/i);
+      if (assigneeMatch) {
+        criteria.filters.assignee = assigneeMatch[1];
+        criteria.needsSearch = true;
+      }
+    }
+
+    // Check for general search keywords that trigger issue lookup
+    const searchTriggers = [
+      'list', 'show', 'find', 'search', 'get', 'give me', 
+      'what are', 'which', 'how many', 'issues'
+    ];
+
+    const triggersSearch = searchTriggers.some(trigger => lowerMessage.includes(trigger));
     
-    return terms;
+    if (triggersSearch && !criteria.needsSearch) {
+      // Look for technical keywords
+      const technicalKeywords = ['login', 'authentication', 'database', 'api', 'frontend', 
+                                'backend', 'bug', 'error', 'crash', 'performance', 'security'];
+      
+      for (const keyword of technicalKeywords) {
+        if (lowerMessage.includes(keyword)) {
+          criteria.query = keyword;
+          criteria.needsSearch = true;
+          break;
+        }
+      }
+    }
+
+    console.log('Extracted search criteria:', criteria);
+    return criteria;
   }
 
   /**

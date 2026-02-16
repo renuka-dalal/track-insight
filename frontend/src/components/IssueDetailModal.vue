@@ -6,7 +6,7 @@
           <h2>{{ issue.title }}</h2>
           <span class="issue-id">#{{ issue.id }}</span>
         </div>
-        <div class="header-actions">
+        <div class="modal-header-actions">
           <button 
             class="delete-btn" 
             @click="confirmDelete"
@@ -296,7 +296,7 @@ export default {
 
 <style scoped>
 .issue-detail-modal {
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 8px;
   width: 90%;
   max-width: 900px;
@@ -310,10 +310,10 @@ export default {
   justify-content: space-between;
   align-items: start;
   padding: 2rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-secondary);
   position: sticky;
   top: 0;
-  background: white;
+  background: var(--bg-secondary);
   z-index: 10;
 }
 
@@ -323,25 +323,25 @@ export default {
 
 .title-section h2 {
   margin: 0 0 0.5rem 0;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 1.5rem;
 }
 
 .title-section .issue-id {
-  color: #999;
+  color: var(--text-dimmed);
   font-size: 0.9rem;
 }
 
-.header-actions {
+.modal-header-actions {
   display: flex;
   gap: 1rem;
   align-items: center;
 }
 
 .delete-btn {
-  background: #fff;
-  border: 1px solid #d32f2f;
-  color: #d32f2f;
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
@@ -351,7 +351,7 @@ export default {
 }
 
 .delete-btn:hover {
-  background: #d32f2f;
+  background: var(--danger);
   color: white;
 }
 
@@ -359,7 +359,7 @@ export default {
   background: none;
   border: none;
   font-size: 2rem;
-  color: #999;
+  color: var(--text-dimmed);
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -368,7 +368,7 @@ export default {
 }
 
 .close-btn:hover {
-  color: #666;
+  color: var(--text-muted);
 }
 
 .modal-body {
@@ -377,7 +377,7 @@ export default {
 
 /* Metadata */
 .issue-metadata {
-  background: #f9f9f9;
+  background: var(--bg-tertiary);
   padding: 1.5rem;
   border-radius: 4px;
   margin-bottom: 2rem;
@@ -397,28 +397,34 @@ export default {
 .metadata-item label {
   display: block;
   font-size: 0.85rem;
-  color: #666;
+  color: var(--text-muted);
   margin-bottom: 0.25rem;
   font-weight: 600;
 }
 
 .metadata-item span {
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .inline-select {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-secondary);
   border-radius: 4px;
-  background: white;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   font-size: 0.9rem;
   cursor: pointer;
 }
 
+.inline-select option {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
 .inline-select:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: var(--accent-primary);
 }
 
 /* Description */
@@ -427,13 +433,13 @@ export default {
 }
 
 .description-section h3 {
-  color: #2c3e50;
+  color: var(--text-primary);
   margin-bottom: 1rem;
   font-size: 1.1rem;
 }
 
 .description-section p {
-  color: #666;
+  color: var(--text-muted);
   line-height: 1.6;
   white-space: pre-wrap;
 }
@@ -444,7 +450,7 @@ export default {
 }
 
 .labels-section h3 {
-  color: #2c3e50;
+  color: var(--text-primary);
   margin-bottom: 1rem;
   font-size: 1.1rem;
 }
@@ -465,7 +471,7 @@ export default {
 
 /* Comments */
 .comments-section h3 {
-  color: #2c3e50;
+  color: var(--text-primary);
   margin-bottom: 1rem;
   font-size: 1.1rem;
 }
@@ -477,12 +483,12 @@ export default {
 .no-comments {
   text-align: center;
   padding: 2rem;
-  color: #999;
+  color: var(--text-dimmed);
   font-style: italic;
 }
 
 .comment-item {
-  background: #f9f9f9;
+  background: var(--bg-tertiary);
   padding: 1rem;
   border-radius: 4px;
   margin-bottom: 1rem;
@@ -495,16 +501,16 @@ export default {
 }
 
 .comment-header strong {
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .comment-date {
   font-size: 0.85rem;
-  color: #999;
+  color: var(--text-dimmed);
 }
 
 .comment-content {
-  color: #666;
+  color: var(--text-muted);
   line-height: 1.6;
   white-space: pre-wrap;
 }
@@ -519,7 +525,7 @@ export default {
 .comment-input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-secondary);
   border-radius: 4px;
   font-family: inherit;
   font-size: 0.9rem;
@@ -528,7 +534,7 @@ export default {
 
 .comment-input:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: var(--accent-primary);
 }
 
 .add-comment-form .btn-primary {

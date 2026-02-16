@@ -68,7 +68,7 @@ test.describe('AI Assistant', () => {
 
   test('should display shared header with branding', async ({ page }) => {
     await expect(page.locator('.header')).toBeVisible();
-    await expect(page.locator('.brand-text h1')).toContainText('Ticket Insight');
+    await expect(page.locator('.brand-text h1')).toContainText('Track Insight');
     await expect(page.locator('.brand-text p')).toContainText('AI-powered ticket intelligence');
   });
 

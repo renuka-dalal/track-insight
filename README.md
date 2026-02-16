@@ -1,4 +1,4 @@
-# TicketInsight
+# Track Insight
 
 > AI-powered issue tracking system with intelligent ticket analysis, comprehensive testing, Docker deployment, and automated CI/CD
 
@@ -31,27 +31,27 @@ A full-featured AI-powered issue tracking system similar to JIRA or GitHub Issue
 ## Features
 
 ### User-Facing
-✅ Complete issue lifecycle management (CRUD)
-✅ **AI chat assistant** — ask questions like "show me all critical open issues" in plain English
-✅ **Natural language ticket queries** powered by OpenAI GPT-4o-mini
-✅ Advanced filtering by status, priority, assignee
-✅ Real-time dashboard with live statistics
-✅ Comment threads on issues
-✅ Label organization system
-✅ CSV export for reporting
-✅ Delete with confirmation safeguards
-✅ Responsive mobile-first design
+- 1. Complete issue lifecycle management (CRUD)
+- 2. **AI chat assistant** — ask questions like "show me all critical open issues" in plain English
+- 3. **Natural language ticket queries** powered by OpenAI GPT-4o-mini
+- 4. Advanced filtering by status, priority, assignee
+- 5.  Real-time dashboard with live statistics
+- 6. Comment threads on issues
+- 7. Label organization system
+- 8. CSV export for reporting
+- 9. Delete with confirmation safeguards
+- 10. Responsive mobile-first design
 
 ### Technical
-✅ RESTful API with full validation
-✅ AI integration via OpenAI API with conversation history
-✅ Database migrations for version control
-✅ Comprehensive error handling
-✅ Test-driven development approach
-✅ Docker multi-stage builds
-✅ GitHub Container Registry image publishing
-✅ Automated dependency updates via Dependabot
-✅ Tag-based release workflow with auto-generated changelogs
+- 1. RESTful API with full validation
+- 2. AI integration via OpenAI API with conversation history
+- 3. Database migrations for version control
+- 4. Comprehensive error handling
+- 5. Test-driven development approach
+- 6. Docker multi-stage builds
+- 7. GitHub Container Registry image publishing
+- 8. Automated dependency updates via Dependabot
+- 9. Tag-based release workflow with auto-generated changelogs
 
 ---
 
@@ -97,23 +97,23 @@ A full-featured AI-powered issue tracking system similar to JIRA or GitHub Issue
 ## CI/CD Pipeline
 
 ### On every Pull Request
-✅ Code linting (ESLint)
-✅ Backend unit & integration tests with coverage
-✅ Frontend unit tests with coverage
-✅ E2E tests across Chrome, Firefox, and Safari
-✅ Docker image builds (backend + frontend)
-✅ Security scanning
-✅ Database migration validation
+- Code linting (ESLint)
+- Backend unit & integration tests with coverage
+- Frontend unit tests with coverage
+- E2E tests across Chrome, Firefox, and Safari
+- Docker image builds (backend + frontend)
+- Security scanning
+- Database migration validation
 
 ### On git tag (`v*`)
-✅ GitHub Release created with auto-generated changelog
-✅ Docker images built and pushed to GitHub Container Registry
-✅ Images tagged as both `latest` and the version tag
+- GitHub Release created with auto-generated changelog
+- Docker images built and pushed to GitHub Container Registry
+- Images tagged as both `latest` and the version tag
 
 ### Automated Dependency Management
-✅ Dependabot monitors npm (backend + frontend), Docker, and GitHub Actions
-✅ Weekly PRs for minor and patch updates — major versions ignored to prevent breaking changes
-✅ Dev dependency updates grouped to reduce PR noise
+- Dependabot monitors npm (backend + frontend), Docker, and GitHub Actions
+- Weekly PRs for minor and patch updates — major versions ignored to prevent breaking changes
+- Dev dependency updates grouped to reduce PR noise
 
 ---
 

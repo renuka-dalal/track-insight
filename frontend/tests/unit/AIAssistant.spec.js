@@ -88,7 +88,7 @@ describe('AIAssistant.vue', () => {
   it('renders the header with correct branding', () => {
     const wrapper = mount(AIAssistant, mountOptions);
 
-    expect(wrapper.find('.brand-text h1').text()).toBe('Ticket Insight');
+    expect(wrapper.find('.brand-text h1').text()).toBe('Track Insight');
     expect(wrapper.find('.brand-text p').text()).toBe('AI-powered ticket intelligence');
   });
 

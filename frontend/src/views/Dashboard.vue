@@ -11,7 +11,7 @@
             </svg>
           </div>
           <div class="brand-text">
-            <h1>Ticket Insight</h1>
+            <h1>Track Insight</h1>
             <p>AI-powered ticket intelligence</p>
           </div>
         </div>
@@ -315,11 +315,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import IssueDetailModal from '../components/IssueDetailModal.vue';
 import '../App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const route = useRoute();
 
 const stats = ref(null);
 const issues = ref([]);
@@ -490,10 +492,37 @@ const filterByAll = () => {
   fetchIssues();
 };
 
-onMounted(() => {
+onMounted(async () => {
   fetchStats();
-  fetchIssues();
+  await fetchIssues();
   fetchUsers();
+  
+  // Auto-open issue modal if query param exists
+  const issueId = route.query.issue;
+  if (issueId) {
+    const id = parseInt(issueId, 10);
+    // Find the issue in the loaded issues
+    const issue = issues.value.find(i => i.id === id);
+    if (issue) {
+      selectIssue(issue);
+    } else {
+      // Issue might not be in current filter, just set the ID
+      selectedIssueId.value = id;
+    }
+  }
+});
+
+// Watch for query param changes (if user clicks another issue chip while already on dashboard)
+watch(() => route.query.issue, (newIssueId) => {
+  if (newIssueId) {
+    const id = parseInt(newIssueId, 10);
+    const issue = issues.value.find(i => i.id === id);
+    if (issue) {
+      selectIssue(issue);
+    } else {
+      selectedIssueId.value = id;
+    }
+  }
 });
 </script>
 
