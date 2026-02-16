@@ -2,7 +2,8 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    tags:
+      - "v*"
 
 jobs:
   release:
@@ -16,16 +17,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate version tag
-        id: version
-        run: |
-          VERSION="v$(date +'%Y.%m.%d')-$(git rev-parse --short HEAD)"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref_name }}
           generate_release_notes: true
 
       - name: Log in to GitHub Container Registry
@@ -42,7 +37,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}/backend:latest
-            ghcr.io/${{ github.repository }}/backend:${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository }}/backend:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -54,6 +49,6 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}/frontend:latest
-            ghcr.io/${{ github.repository }}/frontend:${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository }}/frontend:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
