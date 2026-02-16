@@ -382,4 +382,81 @@ describe('IssueDetailModal.vue', () => {
     // Verify delete API was NOT called
     expect(axios.delete).not.toHaveBeenCalled();
   });
+
+  // ─── AI Assistant integration ────────────────────────────────────────────
+  // The AI assistant surfaces issues by id, priority and status. These tests
+  // verify the modal exposes the correct data so the AI view stays in sync.
+
+  it('exposes issue id in #N format used by AI assistant deep links', async () => {
+    const wrapper = mount(IssueDetailModal, {
+      props: { issueId: 1, users: mockUsers }
+    });
+
+    await nextTick();
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // AI assistant links back to issues using the #<id> format
+    expect(wrapper.find('.issue-id').text()).toBe('#1');
+  });
+
+  it('renders priority value that AI assistant references when surfacing issues', async () => {
+    const wrapper = mount(IssueDetailModal, {
+      props: { issueId: 1, users: mockUsers }
+    });
+
+    await nextTick();
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // mockIssue has priority: 'high' — verify it appears in the rendered modal
+    expect(wrapper.text().toLowerCase()).toContain('high');
+  });
+
+  it('renders status value that AI assistant uses to identify open issues', async () => {
+    const wrapper = mount(IssueDetailModal, {
+      props: { issueId: 1, users: mockUsers }
+    });
+
+    await nextTick();
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // mockIssue has status: 'open' — verify it appears in the rendered modal
+    expect(wrapper.text().toLowerCase()).toContain('open');
+  });
+
+  it('emits updated event after status change so AI assistant stats refresh', async () => {
+    // When a user resolves an issue via the modal, the AI assistant stats
+    // section should reflect the new counts on next render (via the updated event)
+    axios.put.mockResolvedValue({
+      data: { data: { ...mockIssue, status: 'resolved' } }
+    });
+
+    const wrapper = mount(IssueDetailModal, {
+      props: { issueId: 1, users: mockUsers }
+    });
+
+    await nextTick();
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    await wrapper.findAll('select')[0].setValue('resolved');
+    await nextTick();
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // The parent (Dashboard or AIAssistant) listens to this to re-fetch stats
+    expect(wrapper.emitted('updated')).toBeTruthy();
+  });
+
+  it('critical priority issue renders correctly for AI triage view', async () => {
+    const criticalIssue = { ...mockIssue, priority: 'critical' };
+    axios.get.mockResolvedValue({ data: { data: criticalIssue } });
+
+    const wrapper = mount(IssueDetailModal, {
+      props: { issueId: 1, users: mockUsers }
+    });
+
+    await nextTick();
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Verify 'critical' appears somewhere in the rendered modal
+    expect(wrapper.text().toLowerCase()).toContain('critical');
+  });
 });

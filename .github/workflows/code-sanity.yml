@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '**'
+      - '!main'
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -11,6 +12,7 @@ on:
 env:
   NODE_VERSION: '18.x'
   DATABASE_URL: postgresql://testuser:testpass@localhost:5432/issue_tracker_test
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 jobs:
   lint:

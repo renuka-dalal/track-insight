@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const API_URL = process.env.VITE_API_URL || 'http://localhost:5000';
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -33,5 +35,8 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
+    env: {
+      VITE_API_URL: API_URL,
+    }
   },
 });
