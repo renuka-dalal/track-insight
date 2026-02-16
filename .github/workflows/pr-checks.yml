@@ -65,7 +65,7 @@ jobs:
         run: npm run test:unit
       
       - name: Upload backend unit coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always()
         with:
           files: ./backend/coverage/lcov.info
@@ -131,7 +131,7 @@ jobs:
         run: npm run test:integration
       
       - name: Upload integration coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always()
         with:
           files: ./backend/coverage/lcov.info
@@ -165,7 +165,7 @@ jobs:
         run: npm run test:unit
       
       - name: Upload frontend unit coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always()
         with:
           files: ./frontend/coverage/lcov.info
