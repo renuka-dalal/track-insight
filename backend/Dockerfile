@@ -12,7 +12,7 @@ COPY package*.json ./
 # Install ALL dependencies (including devDependencies for migrations)
 RUN npm ci
 
-# Copy source code, migrations, and scripts
+# Copy source code, migrations, scripts, and seeds
 COPY . .
 
 # Production stage
@@ -26,6 +26,7 @@ COPY --from=base /app/package*.json ./
 COPY --from=base /app/src ./src
 COPY --from=base /app/migrations ./migrations
 COPY --from=base /app/scripts ./scripts
+COPY --from=base /app/seeds ./seeds
 
 # Copy startup script
 COPY start.sh /app/start.sh
