@@ -1,60 +1,41 @@
-# Stage 1: Build stage
-FROM node:25-alpine AS builder
+# Multi-stage build for production
+FROM node:18-alpine AS base
 
-ARG BUILD_DATE
-ARG VCS_REF
-
-LABEL org.opencontainers.image.created=$BUILD_DATE \
-      org.opencontainers.image.revision=$VCS_REF \
-      org.opencontainers.image.title="Issue Tracker Backend" \
-      org.opencontainers.image.description="Node.js REST API for Issue Tracker"
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && \
-    npm cache clean --force
+# Install ALL dependencies (including devDependencies for migrations)
+RUN npm ci
 
-# Copy application code
+# Copy source code and migrations
 COPY . .
 
-# Stage 2: Production stage
-FROM node:25-alpine AS production
-
-# Install security updates and necessary tools
-RUN apk update && \
-    apk upgrade && \
-    apk add --no-cache dumb-init curl && \
-    rm -rf /var/cache/apk/*
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+# Production stage
+FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy from builder
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --chown=nodejs:nodejs . .
+# Copy node_modules and source from base
+COPY --from=base /app/node_modules ./node_modules
+COPY --from=base /app/package*.json ./
+COPY --from=base /app/src ./src
+COPY --from=base /app/migrations ./migrations
 
-# Make scripts executable
-RUN chmod +x scripts/*.js
+# Copy startup script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
-# Switch to non-root user
-USER nodejs
-
-# Expose port
-EXPOSE 5000
+# Expose port (Render uses 10000)
+EXPOSE 10000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
+  CMD node -e "require('http').get('http://localhost:10000/api/stats', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Use dumb-init to handle signals
-ENTRYPOINT ["dumb-init", "--"]
-
-# Start application
-CMD ["node", "src/server.js"]
+# Run startup script
+CMD ["/app/start.sh"]
