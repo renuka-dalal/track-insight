@@ -6,4 +6,4 @@ frontend/coverage
 frontend/node_modules
 backend/node_modules
 backend/.env
-backend/.env.test
+backend/.env.testnode_modules
