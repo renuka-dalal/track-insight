@@ -1,6 +1,20 @@
+---
+title: Track Insight
+emoji: 👀
+colorFrom: pink
+colorTo: blue
+sdk: docker
+pinned: false
+license: apache-2.0
+short_description: AI-powered ticket intelligence
+---
+
 # Track Insight
 
 > AI-powered issue tracking system with intelligent ticket analysis, comprehensive testing, Docker deployment, and automated CI/CD
+
+[![CI](https://github.com/renuka-dalal/ticket-insight/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/renuka-dalal/ticket-insight/actions)
+[![Release](https://github.com/renuka-dalal/ticket-insight/actions/workflows/release.yml/badge.svg)](https://github.com/renuka-dalal/ticket-insight/releases)
 
 **What it does:**
 A full-featured AI-powered issue tracking system similar to JIRA or GitHub Issues, allowing teams to:
@@ -31,37 +45,37 @@ A full-featured AI-powered issue tracking system similar to JIRA or GitHub Issue
 ## Features
 
 ### User-Facing
-- 1. Complete issue lifecycle management (CRUD)
-- 2. **AI chat assistant** — ask questions like "show me all critical open issues" in plain English
-- 3. **Natural language ticket queries** powered by OpenAI GPT-4o-mini
-- 4. Advanced filtering by status, priority, assignee
-- 5.  Real-time dashboard with live statistics
-- 6. Comment threads on issues
-- 7. Label organization system
-- 8. CSV export for reporting
-- 9. Delete with confirmation safeguards
-- 10. Responsive mobile-first design
+1. Complete issue lifecycle management (CRUD)
+2. **AI chat assistant** — ask questions like "show me all critical open issues" in plain English
+3. **Natural language ticket queries** powered by OpenAI GPT-4o-mini
+4. Advanced filtering by status, priority, assignee
+5. Real-time dashboard with live statistics
+6. Comment threads on issues
+7. Label organization system
+8. CSV export for reporting
+9. Delete with confirmation safeguards
+10. Responsive mobile-first design
 
 ### Technical
-- 1. RESTful API with full validation
-- 2. AI integration via OpenAI API with conversation history
-- 3. Database migrations for version control
-- 4. Comprehensive error handling
-- 5. Test-driven development approach
-- 6. Docker multi-stage builds
-- 7. GitHub Container Registry image publishing
-- 8. Automated dependency updates via Dependabot
-- 9. Tag-based release workflow with auto-generated changelogs
+1. RESTful API with full validation
+2. AI integration via OpenAI API with conversation history
+3. Database migrations for version control
+4. Comprehensive error handling
+5. Test-driven development approach
+6. Docker multi-stage builds
+7. GitHub Container Registry image publishing
+8. Automated dependency updates via Dependabot
+9. Tag-based release workflow with auto-generated changelogs
 
 ---
 
 ## Tech Stack
 
-**Frontend:** Vue.js 3, Vite, Axios, CSS3
-**Backend:** Node.js, Express, PostgreSQL
-**AI:** OpenAI GPT-4o-mini
-**DevOps:** Docker, GitHub Actions, GitHub Container Registry, Alpine Linux
-**Testing:** Jest, Vitest, Playwright, Supertest
+**Frontend:** Vue.js 3, Vite, Axios, CSS3  
+**Backend:** Node.js, Express, PostgreSQL  
+**AI:** OpenAI GPT-4o-mini  
+**DevOps:** Docker, GitHub Actions, GitHub Container Registry, Alpine Linux  
+**Testing:** Jest, Vitest, Playwright, Supertest  
 **Tools:** ESLint, Dependabot, Git, npm
 
 ---
@@ -91,6 +105,14 @@ A full-featured AI-powered issue tracking system similar to JIRA or GitHub Issue
 │   Database     │   │   GPT-4o-mini     │
 └────────────────┘   └───────────────────┘
 ```
+
+---
+
+## 🚀 Hugging Face Deployment
+
+This Space requires an OpenAI API key to power the AI assistant.
+
+**Note:** The database resets on Space restarts. This is intentional for demo purposes with fresh seed data.
 
 ---
 
@@ -150,7 +172,7 @@ POST   /api/ai/chat             AI assistant chat (OpenAI proxy)
 
 ## Docker Images
 
-Published to GitHub Container Registry on every release (Privately)
+Published to GitHub Container Registry on every release.
 
 ---
 

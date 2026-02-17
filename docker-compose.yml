@@ -21,6 +21,22 @@ services:
     networks:
       - issue-tracker-network
 
+  # Database Migration Service (runs once then exits)
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: issue-tracker-migrate
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/issue_tracker
+    command: sh -c "npm run migrate:up && npm run db:seed:realistic"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - issue-tracker-network
+    restart: "no"
+
   # Backend API
   backend:
     build:
@@ -28,11 +44,13 @@ services:
       dockerfile: Dockerfile
     container_name: issue-tracker-backend
     env_file:
-    - ./backend/.env
-    # environment:
-    #   NODE_ENV: development
-    #   PORT: 5000
-    #   DATABASE_URL: postgresql://postgres:postgres@postgres:5432/issue_tracker
+    - ./backend/.env  # For local dev - loads OPENAI_API_KEY from .env
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/issue_tracker
+      # OPENAI_API_KEY from env_file or environment variable (Hugging Face injects it)
+      OPENAI_API_KEY: ${OPENAI_API_KEY}  # Falls back to .env if not set
     ports:
       - "5000:5000"
     volumes:
@@ -53,22 +71,6 @@ services:
       - issue-tracker-network
     restart: unless-stopped
 
-  # Database Migration Service (runs once then exits)
-  migrate:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: issue-tracker-migrate
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/issue_tracker
-    command: sh -c "npm run migrate:up && npm run db:seed:realistic"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - issue-tracker-network
-    restart: "no"
-
   # Frontend Application
   frontend:
     build:
@@ -80,7 +82,7 @@ services:
     environment:
       VITE_API_URL: http://localhost:5000
     ports:
-      - "3000:3000"
+      - "7860:3000"  # Hugging Face requires port 7860, maps to frontend's 3000
     volumes:
       - ./frontend/src:/app/src
       - /app/node_modules
