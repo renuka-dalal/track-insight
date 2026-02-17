@@ -17,8 +17,11 @@ services:
         value: production
       - key: PORT
         value: 10000
+      # Allow CORS from frontend
       - key: FRONTEND_URL
         value: https://track-insight-frontend.onrender.com
+    # Run migrations, seed, then start
+    dockerCommand: sh -c "npm run migrate:up && npm run db:seed:realistic && npm start"
     healthCheckPath: /api/stats
     
   # Frontend Service  
@@ -29,6 +32,7 @@ services:
     dockerfilePath: ./frontend/Dockerfile.prod
     dockerContext: ./frontend
     envVars:
+      # Use full backend URL
       - key: VITE_API_URL
         value: https://track-insight-backend.onrender.com
 
