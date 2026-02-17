@@ -1,14 +1,3 @@
----
-title: Track Insight
-emoji: 👀
-colorFrom: pink
-colorTo: blue
-sdk: docker
-pinned: false
-license: apache-2.0
-short_description: AI-powered ticket intelligence
----
-
 # Track Insight
 
 > AI-powered issue tracking system with intelligent ticket analysis, comprehensive testing, Docker deployment, and automated CI/CD
