@@ -1,5 +1,5 @@
 # Stage 1: Build stage
-FROM node:18-alpine AS builder
+FROM node:25-alpine AS builder
 
 ARG BUILD_DATE
 ARG VCS_REF
@@ -22,7 +22,7 @@ RUN npm ci --only=production && \
 COPY . .
 
 # Stage 2: Production stage
-FROM node:18-alpine AS production
+FROM node:25-alpine AS production
 
 # Install security updates and necessary tools
 RUN apk update && \
