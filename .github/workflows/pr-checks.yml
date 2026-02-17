@@ -65,7 +65,7 @@ jobs:
         run: npm run test:unit
       
       - name: Upload backend unit coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always()
         with:
           files: ./backend/coverage/lcov.info
@@ -131,7 +131,7 @@ jobs:
         run: npm run test:integration
       
       - name: Upload integration coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always()
         with:
           files: ./backend/coverage/lcov.info
@@ -165,7 +165,7 @@ jobs:
         run: npm run test:unit
       
       - name: Upload frontend unit coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always()
         with:
           files: ./frontend/coverage/lcov.info
@@ -175,7 +175,7 @@ jobs:
         continue-on-error: true
       
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: frontend-unit-coverage
@@ -258,7 +258,7 @@ jobs:
         run: npm run test:e2e
       
       - name: Upload Playwright HTML report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: playwright-report
@@ -266,7 +266,7 @@ jobs:
           retention-days: 7
       
       - name: Upload Playwright test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: playwright-results
@@ -287,7 +287,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
       
       - name: Build backend image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./backend
           push: false
@@ -296,7 +296,7 @@ jobs:
           cache-to: type=gha,mode=max
       
       - name: Build frontend image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./frontend
           file: ./frontend/Dockerfile.dev
