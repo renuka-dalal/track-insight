@@ -1,10 +1,27 @@
-backend/coverage/*
+#Frontend
 frontend/playwright-report/*
 frontend/test-results/*
 frontend/dist
 frontend/coverage
 frontend/node_modules
+
+#Backend
+backend/coverage/*
 backend/node_modules
 backend/.env
 backend/.env.test
 node_modules
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+*.tfvars
+
+# AWS
+.aws/
+
+# Environment files
+.env.aws
