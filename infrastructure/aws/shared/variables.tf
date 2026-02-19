@@ -50,13 +50,13 @@ variable "openai_api_key" {
 variable "backend_image" {
   description = "Backend Docker image URI in ECR"
   type        = string
-  default     = ""  # Will be populated after first ECR push
+  default     = ""
 }
 
 variable "frontend_image" {
   description = "Frontend Docker image URI in ECR"
   type        = string
-  default     = ""  # Will be populated after first ECR push
+  default     = ""
 }
 
 variable "backend_cpu" {
