@@ -58,7 +58,7 @@ variable "github_repository" {
 variable "github_branch" {
   description = "GitHub branch to monitor for changes"
   type        = string
-  default     = "integration/aws"  # Testing pipeline on feature branch
+  default     = "main"
 }
 
 variable "tags" {

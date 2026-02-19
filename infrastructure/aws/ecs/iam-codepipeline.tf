@@ -65,7 +65,10 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
           "ecs:DescribeTasks",
           "ecs:ListTasks",
           "ecs:RegisterTaskDefinition",
-          "ecs:UpdateService"
+          "ecs:UpdateService",
+          "ecs:DescribeClusters",
+          "ecs:ListTaskDefinitions",
+          "ecs:TagResource"
         ]
         Resource = "*"
       },
@@ -78,6 +81,13 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
           aws_iam_role.ecs_task_execution_role.arn,
           aws_iam_role.ecs_task_role.arn
         ]
+        Condition = {
+          StringEqualsIfExists = {
+            "iam:PassedToService" = [
+              "ecs-tasks.amazonaws.com"
+            ]
+          }
+        }
       },
       {
         Effect = "Allow"
