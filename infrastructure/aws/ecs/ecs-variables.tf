@@ -49,6 +49,18 @@ variable "frontend_memory" {
   default     = 512
 }
 
+variable "github_repository" {
+  description = "GitHub repository in format owner/repo"
+  type        = string
+  default     = "renuka-dalal/track-insight"
+}
+
+variable "github_branch" {
+  description = "GitHub branch to monitor for changes"
+  type        = string
+  default     = "integration/aws"  # Testing pipeline on feature branch
+}
+
 variable "tags" {
   description = "Common tags"
   type        = map(string)
