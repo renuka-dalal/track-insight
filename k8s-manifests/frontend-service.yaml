@@ -1,0 +1,15 @@
+# k8s-manifests/frontend-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 10000
+    targetPort: 10000
+    protocol: TCP
+  selector:
+    app: frontend

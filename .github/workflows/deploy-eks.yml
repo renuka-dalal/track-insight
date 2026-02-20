@@ -1,0 +1,110 @@
+# .github/workflows/deploy-eks.yml
+# GitHub Actions workflow for deploying to Amazon EKS
+
+name: Deploy to EKS
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to main
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'k8s-manifests/**'
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: track-insight-dev-eks
+  ECR_BACKEND_REPO: track-insight-backend
+  ECR_FRONTEND_REPO: track-insight-frontend
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend to EKS
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+    
+    - name: Build and push backend image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        cd backend
+        docker build -t $ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG .
+        docker tag $ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
+        docker push $ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
+    
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+    
+    - name: Deploy to EKS
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        kubectl set image deployment/backend backend=$ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG
+        kubectl rollout status deployment/backend
+  
+  deploy-frontend:
+    name: Deploy Frontend to EKS
+    runs-on: ubuntu-latest
+    needs: deploy-backend  # Run after backend
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+    
+    - name: Get EKS ALB URL
+      id: get-alb
+      run: |
+        aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+        ALB_URL=$(kubectl get ingress track-insight-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        echo "alb_url=http://$ALB_URL" >> $GITHUB_OUTPUT
+    
+    - name: Build and push frontend image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+        VITE_API_URL: ${{ steps.get-alb.outputs.alb_url }}
+      run: |
+        cd frontend
+        docker build --build-arg VITE_API_URL=$VITE_API_URL -f Dockerfile.prod -t $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG .
+        docker tag $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG $ECR_REGISTRY/$ECR_FRONTEND_REPO:latest
+        docker push $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_FRONTEND_REPO:latest
+    
+    - name: Deploy to EKS
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        kubectl set image deployment/frontend frontend=$ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG
+        kubectl rollout status deployment/frontend
