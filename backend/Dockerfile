@@ -1,5 +1,5 @@
 # Multi-stage build for production
-FROM node:18-alpine AS base
+FROM public.ecr.aws/docker/library/node:18-alpine AS base
 
 # Install build dependencies
 RUN apk add --no-cache python3 make g++
@@ -16,7 +16,7 @@ RUN npm ci
 COPY . .
 
 # Production stage
-FROM node:18-alpine
+FROM public.ecr.aws/docker/library/node:18-alpine
 
 WORKDIR /app
 
