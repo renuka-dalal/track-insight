@@ -7,6 +7,7 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types as genai_types
 
 from src.services import db_service
+from src.agents.validator import validate_and_correct_triage
 
 # google-genai reads GOOGLE_API_KEY; map GEMINI_API_KEY as a fallback
 if not os.getenv("GOOGLE_API_KEY") and os.getenv("GEMINI_API_KEY"):
@@ -253,4 +254,8 @@ async def run_triage(title: str, description: str | None) -> str:
         if event.is_final_response() and event.content and event.content.parts:
             final_text = event.content.parts[0].text
 
-    return final_text or "Agent returned no response."
+    return await validate_and_correct_triage(
+        original_response=final_text or "Agent returned no response.",
+        title=title,
+        description=description,
+    )

@@ -26,7 +26,7 @@ router.post('/agent', async (req, res) => {
         title: title ?? null,
         description: description ?? null,
       }),
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.timeout(120000),
     });
 
     const data = await response.json();

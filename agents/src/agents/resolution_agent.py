@@ -8,6 +8,7 @@ from google.genai import types as genai_types
 
 from src.services import db_service
 from src.agents.search_agent import run_search
+from src.agents.validator import validate_and_correct_resolution
 
 # google-genai reads GOOGLE_API_KEY; map GEMINI_API_KEY as a fallback
 if not os.getenv("GOOGLE_API_KEY") and os.getenv("GEMINI_API_KEY"):
@@ -37,6 +38,7 @@ async def get_issue_details(issue_id: int) -> str:
     Returns:
         A formatted string with the issue's full details, or a not-found message.
     """
+    print(f"[resolution_agent] → get_issue_details(issue_id={issue_id})")
     issue = await db_service.get_issue(issue_id)
     if not issue:
         return f"Issue #{issue_id} not found."
@@ -65,6 +67,7 @@ async def get_similar_issues(title: str, description: str) -> str:
     Returns:
         A formatted list of similar issues, noting their resolution status.
     """
+    print(f"[resolution_agent] → get_similar_issues(title={title!r})")
     issues = await db_service.get_similar_issues(title, description)
     if not issues:
         return "No similar issues found in the database."
@@ -97,6 +100,7 @@ async def search_for_solutions(title: str, description: str) -> str:
     Returns:
         A markdown summary of relevant web findings with source URLs.
     """
+    print(f"[resolution_agent] → search_for_solutions(title={title!r})")
     return await run_search(title=title, description=description)
 
 
@@ -182,4 +186,9 @@ async def run_resolution(issue_id: int | None, title: str, description: str | No
         if event.is_final_response() and event.content and event.content.parts:
             final_text = event.content.parts[0].text
 
-    return final_text or "Agent returned no response."
+    return await validate_and_correct_resolution(
+        original_response=final_text or "Agent returned no response.",
+        issue_id=issue_id,
+        title=title,
+        description=description,
+    )
