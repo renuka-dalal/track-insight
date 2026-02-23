@@ -25,3 +25,4 @@ terraform.tfvars
 
 # Environment files
 .env.aws
+agents/.env

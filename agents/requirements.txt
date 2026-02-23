@@ -1,0 +1,7 @@
+google-adk
+fastapi
+uvicorn[standard]
+asyncpg
+psycopg2-binary
+python-dotenv
+httpx

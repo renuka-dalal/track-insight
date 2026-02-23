@@ -2,13 +2,50 @@
 const express = require('express');
 const AIChatService = require('../services/ai-chat');
 
+const AGENT_SERVICE_URL = process.env.AGENT_SERVICE_URL || 'http://agents:8000';
+
+// Keywords that signal the user wants an ADK agent capability
+const AGENT_KEYWORDS = ["resolve this issue", "resolution plan", "root cause", "find solution","how to resolve", 'triage', 'search for solution', "suggest a fix", "how to fix", 'similar issues'];
+
+function isAgentRequest(message) {
+  if (message.length < 10) return false;
+  const lower = message.toLowerCase();
+  return AGENT_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+async function callAgentService(message) {
+  const response = await fetch(`${AGENT_SERVICE_URL}/api/agents/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message }),
+    signal: AbortSignal.timeout(60000),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Agent service responded with ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  // Normalise to the same shape the existing chat endpoint returns
+  return {
+    success: data.success,
+    message: data.result,
+    suggestedActions: [],
+    relatedIssues: [],
+  };
+}
+
 function createAIChatRouter(pool) {
   const router = express.Router();
   const chatService = new AIChatService(pool);
 
   /**
    * POST /api/ai/chat
-   * Send a message to the AI assistant
+   * Send a message to the AI assistant.
+   * Messages matching agent keywords are routed to the Python ADK service;
+   * all others go to the existing OpenAI flow.
    */
   router.post('/chat', async (req, res) => {
     try {
@@ -21,8 +58,21 @@ function createAIChatRouter(pool) {
         });
       }
 
+      if (isAgentRequest(message)) {
+        try {
+          const agentResult = await callAgentService(message.trim());
+          return res.json(agentResult);
+        } catch (agentError) {
+          console.error('Agent service error:', agentError.message);
+          return res.status(503).json({
+            success: false,
+            error: 'Agent service is unavailable. Please try again later.',
+          });
+        }
+      }
+
       // Validate conversation history format
-      const validHistory = conversationHistory.filter(msg => 
+      const validHistory = conversationHistory.filter(msg =>
         msg.role && msg.content && ['user', 'assistant'].includes(msg.role)
       );
 
@@ -49,7 +99,7 @@ function createAIChatRouter(pool) {
 
       // Get issue details
       const issueResult = await pool.query(`
-        SELECT i.*, 
+        SELECT i.*,
                reporter.username as reporter_username,
                assignee.username as assignee_username,
                json_agg(DISTINCT c.*) FILTER (WHERE c.id IS NOT NULL) as comments
