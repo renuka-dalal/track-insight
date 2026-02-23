@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
+const path = require('path');
 const { Pool } = require('pg');
 const fs = require('fs');
-const path = require('path');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -160,7 +160,7 @@ async function showStatus() {
     console.log('─'.repeat(60));
     
     for (const migration of available) {
-      const status = applied.includes(migration) ? '✅ Applied' : '⏳ Pending';
+      const status = applied.includes(migration) ? 'Applied' : 'Pending';
       console.log(`${status} - ${migration}`);
     }
     
