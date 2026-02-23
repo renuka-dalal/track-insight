@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const { Pool } = require('pg');
 const createAIChatRouter = require('./routes/ai-chat');
+const GitHubSyncService = require('./services/github-sync');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,6 +17,8 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
+
+const githubSync = new GitHubSyncService(pool);
 
 // Test database connection
 pool.on('connect', () => {
@@ -252,7 +255,12 @@ app.post('/api/issues', async (req, res) => {
       }
       
       await client.query('COMMIT');
-      
+
+      // Fire-and-forget: sync to GitHub after successful DB insert
+      githubSync.syncToGitHub(issue).catch(err =>
+        console.error('GitHub sync failed for issue', issue.id, ':', err.message)
+      );
+
       res.status(201).json({ success: true, data: issue });
     } catch (error) {
       await client.query('ROLLBACK');
@@ -314,8 +322,15 @@ app.put('/api/issues/:id', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Issue not found' });
     }
-    
-    res.json({ success: true, data: result.rows[0] });
+
+    const updatedIssue = result.rows[0];
+
+    // Fire-and-forget: push changes to GitHub after successful DB update
+    githubSync.updateOnGitHub(updatedIssue).catch(err =>
+      console.error('GitHub update failed for issue', updatedIssue.id, ':', err.message)
+    );
+
+    res.json({ success: true, data: updatedIssue });
   } catch (error) {
     console.error('Error updating issue:', error);
     res.status(500).json({ success: false, error: 'Failed to update issue' });
@@ -327,12 +342,22 @@ app.delete('/api/issues/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const result = await pool.query('DELETE FROM issues WHERE id = $1 RETURNING id', [id]);
-    
+    const result = await pool.query(
+      'DELETE FROM issues WHERE id = $1 RETURNING id, github_issue_number',
+      [id]
+    );
+
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Issue not found' });
     }
-    
+
+    const { github_issue_number } = result.rows[0];
+
+    // Fire-and-forget: close the GitHub issue before it's gone from our DB
+    githubSync.deleteOnGitHub(github_issue_number).catch(err =>
+      console.error('GitHub delete failed for issue number', github_issue_number, ':', err.message)
+    );
+
     res.json({ success: true, message: 'Issue deleted successfully' });
   } catch (error) {
     console.error('Error deleting issue:', error);
