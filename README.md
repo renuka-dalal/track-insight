@@ -1,168 +1,101 @@
 # Track Insight
 
-> AI-powered issue tracking system with intelligent ticket analysis, comprehensive testing, Docker deployment, and automated CI/CD
+> Enterprise issue tracking platform with a Google ADK multi-agent system — autonomous triage, resolution planning, and self-correcting quality assurance.
 
 [![CI](https://github.com/renuka-dalal/ticket-insight/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/renuka-dalal/ticket-insight/actions)
 [![Release](https://github.com/renuka-dalal/ticket-insight/actions/workflows/release.yml/badge.svg)](https://github.com/renuka-dalal/ticket-insight/releases)
 
-**What it does:**
-A full-featured AI-powered issue tracking system similar to JIRA or GitHub Issues, allowing teams to:
-- Create and track issues/bugs with AI-assisted triage
-- Query your entire issue backlog using natural language via an AI assistant
-- Assign priorities and statuses
-- Add comments and updates
-- Filter and search issues
-- Track issue lifecycle from creation to resolution
-- Export data to CSV for reporting
+→ **[Interactive Architecture](docs/track-insight-interactive.html)** · **[Architecture Decisions](docs/decisions/)** · **[Medium Article](#)**
+
+## Stack
+
+| Layer | Tech |
+|---|---|
+| Frontend | Vue.js 3, Vite |
+| Backend | Node.js, Express, PostgreSQL, pgvector |
+| AI | OpenAI GPT-4o-mini, Google Gemini (via ADK) |
+| Agent Service | Python 3.11, FastAPI, Google ADK |
+| Infrastructure | AWS ECS Fargate, EKS, Terraform, Docker |
+| CI/CD | GitHub Actions, AWS CodePipeline, GHCR |
+| Testing | Jest, Vitest, Playwright (126 tests, 80%+ coverage) |
 
 ---
 
-## Key Highlights
+## Agent System
 
-- **AI Assistant** - GPT-4o-mini powered natural language interface for querying issues
-- **126 Automated Tests** - Unit, integration, and E2E with Playwright across 3 browsers
-- **Full Docker Stack** - Production-ready containerized deployment
-- **CI/CD Pipeline** - Automated testing, building, release tagging, and GHCR image publishing
-- **80%+ Test Coverage** - Comprehensive backend and frontend testing
-- **Cross-Browser Tested** - Chrome, Firefox, Safari via Playwright
-- **Automated Dependency Management** - Dependabot keeping all packages current
-- **Real-Time Updates** - Dynamic filtering and live statistics
-- **Professional Seed Data** - 22 realistic issues with 40+ comments
+Five Google ADK agents running in a separate Python FastAPI microservice:
 
----
+| Agent | Role |
+|---|---|
+| **Coordinator** | Routes user intent to the right specialist |
+| **Issue Manager** | Triages issues — priority, category, assignee from DB context |
+| **Search Agent** | Google Search for solutions and documentation |
+| **Resolution Agent** | Structured fix plans: root cause, similar issues, references |
+| **Validator** | Reviews outputs, triggers self-correction loops (max 2 attempts) |
 
-## Features
-
-### User-Facing
-1. Complete issue lifecycle management (CRUD)
-2. **AI chat assistant** — ask questions like "show me all critical open issues" in plain English
-3. **Natural language ticket queries** powered by OpenAI GPT-4o-mini
-4. Advanced filtering by status, priority, assignee
-5. Real-time dashboard with live statistics
-6. Comment threads on issues
-7. Label organization system
-8. CSV export for reporting
-9. Delete with confirmation safeguards
-10. Responsive mobile-first design
-
-### Technical
-1. RESTful API with full validation
-2. AI integration via OpenAI API with conversation history
-3. Database migrations for version control
-4. Comprehensive error handling
-5. Test-driven development approach
-6. Docker multi-stage builds
-7. GitHub Container Registry image publishing
-8. Automated dependency updates via Dependabot
-9. Tag-based release workflow with auto-generated changelogs
+Chat messages are keyword-routed in the Node.js backend — agent-specific requests hit the Python service, everything else uses OpenAI.
 
 ---
 
-## Tech Stack
+## API
 
-**Frontend:** Vue.js 3, Vite, Axios, CSS3  
-**Backend:** Node.js, Express, PostgreSQL  
-**AI:** OpenAI GPT-4o-mini  
-**DevOps:** Docker, GitHub Actions, GitHub Container Registry, Alpine Linux  
-**Testing:** Jest, Vitest, Playwright, Supertest  
-**Tools:** ESLint, Dependabot, Git, npm
-
----
-
-## Architecture
-
+**Node.js**
 ```
-┌─────────────────────────────────────────┐
-│              Vue.js 3 Frontend           │
-│  ┌──────────────┐  ┌──────────────────┐ │
-│  │  Dashboard   │  │  AI Assistant    │ │
-│  │  (Issues)    │  │  (Chat UI)       │ │
-│  └──────────────┘  └──────────────────┘ │
-└────────────────────┬────────────────────┘
-                     │ REST API
-┌────────────────────▼────────────────────┐
-│           Node.js / Express              │
-│  ┌──────────────┐  ┌──────────────────┐ │
-│  │  Issues API  │  │  /api/ai/chat    │ │
-│  │  Users API   │  │  (OpenAI proxy)  │ │
-│  │  Stats API   │  └──────────────────┘ │
-│  └──────┬───────┘           │           │
-└─────────│───────────────────│───────────┘
-          │                   │
-┌─────────▼──────┐   ┌────────▼──────────┐
-│   PostgreSQL   │   │   OpenAI API      │
-│   Database     │   │   GPT-4o-mini     │
-└────────────────┘   └───────────────────┘
+GET/POST/PUT/DELETE  /api/issues/:id      Issue CRUD
+POST                 /api/issues/:id/comments
+GET                  /api/stats           Dashboard metrics
+POST                 /api/ai/chat         OpenAI or agent-routed
+POST                 /api/chat/agent      Direct coordinator proxy
+```
+
+**Python Agent Service**
+```
+POST  /api/agents/chat     Coordinator entry point
+POST  /api/agents/triage   Issue Manager
+POST  /api/agents/resolve  Resolution Agent
+POST  /api/agents/search   Search Agent
 ```
 
 ---
 
-## 🚀 Hugging Face Deployment
+## Deployment
 
-This Space requires an OpenAI API key to power the AI assistant.
-
-**Note:** The database resets on Space restarts. This is intentional for demo purposes with fresh seed data.
-
----
-
-## CI/CD Pipeline
-
-### On every Pull Request
-- Code linting (ESLint)
-- Backend unit & integration tests with coverage
-- Frontend unit tests with coverage
-- E2E tests across Chrome, Firefox, and Safari
-- Docker image builds (backend + frontend)
-- Security scanning
-- Database migration validation
-
-### On git tag (`v*`)
-- GitHub Release created with auto-generated changelog
-- Docker images built and pushed to GitHub Container Registry
-- Images tagged as both `latest` and the version tag
-
-### Automated Dependency Management
-- Dependabot monitors npm (backend + frontend), Docker, and GitHub Actions
-- Weekly PRs for minor and patch updates — major versions ignored to prevent breaking changes
-- Dev dependency updates grouped to reduce PR noise
+| Platform | Details |
+|---|---|
+| **Render** | Primary dev/staging — auto-deploys on push to main |
+| **AWS ECS Fargate** | Production path via GitHub Actions + AWS CodePipeline · [Screenshots](docs/aws-deployment/screenshots/ecs-deployment/) |
+| **AWS EKS** | Kubernetes deployment via `k8s-manifests/` · [Screenshots](docs/aws-deployment/screenshots/eks-deployment/) |
 
 ---
 
-## Metrics
+## Infrastructure
 
-| Metric | Value |
-|--------|-------|
-| Total Tests | 126 |
-| Backend Coverage | 80%+ |
-| Frontend Coverage | 75%+ |
-| E2E Test Scenarios | 48 |
-| Browsers Tested | 3 (Chrome, Firefox, Safari) |
-| Docker Image Size | <400MB |
-| CI/CD Stages | 8 |
-| AI Model | GPT-4o-mini |
+Deployed on AWS in two configurations — see [ADR-001](docs/decisions/001-ecs-vs-eks.md) for the rationale:
+
+- **ECS Fargate** — serverless containers, no EC2 management, primary production path
+- **EKS** — Kubernetes manifests for portability and cluster-level control
+- **Terraform** — 60+ AWS resources provisioned as code (VPC, RDS, ALB, ECR)
+- **RDS PostgreSQL** — private subnet with pgvector extension enabled
 
 ---
 
-## 🔧 API Endpoints
+## CI/CD
 
-```
-GET    /api/issues              List all issues (supports ?status, ?priority, ?search filters)
-GET    /api/issues/:id          Get issue details with comments
-POST   /api/issues              Create issue
-PUT    /api/issues/:id          Update issue
-DELETE /api/issues/:id          Delete issue
-POST   /api/issues/:id/comments Add comment
-GET    /api/users               List users
-GET    /api/stats               Dashboard statistics
-POST   /api/ai/chat             AI assistant chat (OpenAI proxy)
-```
+- PRs trigger linting, 126 tests, E2E across 3 browsers, Docker builds, security scanning
+- Git tags (`v*`) publish Docker images to GHCR and create GitHub Releases
+- Dependabot manages weekly dependency updates (minor/patch only)
 
 ---
 
-## Docker Images
+## Architecture Decisions
 
-Published to GitHub Container Registry on every release.
+| ADR | Decision |
+|---|---|
+| [001](docs/decisions/001-ecs-vs-eks.md) | ECS Fargate + EKS both implemented |
+| [002](docs/decisions/002-python-agent-microservice.md) | Separate Python microservice for agents |
+| [003](docs/decisions/003-pgvector-over-chromadb.md) | pgvector over ChromaDB |
+| [004](docs/decisions/004-non-blocking-agent-calls.md) | Non-blocking agent calls with graceful degradation |
+| [005](docs/decisions/005-validator-self-correction-pattern.md) | Validator self-correction pattern |
+| [006](docs/decisions/006-multi-agent-over-single-llm.md) | Multi-agent over single LLM call |
 
----
-
-**Built with modern best practices and industry-standard tools**
+![Track Insight Architecture](docs/track-insight-architecture.svg)
