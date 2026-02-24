@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const { Pool } = require('pg');
 const createAIChatRouter = require('./routes/ai-chat');
+const agentsRouter = require('./routes/agents');
 const GitHubSyncService = require('./services/github-sync');
 
 const app = express();
@@ -44,6 +45,7 @@ app.use((req, res, next) => {
 
 //AI Chat Service
  app.use('/api/ai', createAIChatRouter(pool));
+app.use('/api/chat', agentsRouter);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {

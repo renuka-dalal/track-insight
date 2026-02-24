@@ -69,6 +69,25 @@ services:
       - issue-tracker-network
     restart: unless-stopped
 
+  # Agents Microservice
+  agents:
+    build:
+      context: ./agents
+      dockerfile: Dockerfile
+    container_name: issue-tracker-agents
+    env_file:
+      - ./agents/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/issue_tracker
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - issue-tracker-network
+    restart: unless-stopped
+
   # Frontend Application
   frontend:
     build:
