@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Track Insight — System Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Syne:wght@700;800&display=swap');
+
+  :root {
+    --blue:   #4a9eff;
+    --green:  #4aff9e;
+    --purple: #9b59ff;
+    --violet: #7a4aff;
+    --pink:   #ff4a9e;
+    --gold:   #ffd94a;
+    --cyan:   #4affff;
+    --bg:     #07090f;
+    --bg2:    #0d1117;
+    --border: #1a2030;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 60px 20px 40px;
+    position: relative;
+  }
+  .hero::before {
+    content:'';
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:600px; height:1px;
+    background: linear-gradient(90deg, transparent, var(--purple), transparent);
+  }
+  .hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 6px;
+    color: var(--purple);
+    margin-bottom: 16px;
+  }
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 0%, #aabbcc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-title span {
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-sub {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #445566;
+    margin-bottom: 40px;
+  }
+
+  /* ── BADGES ── */
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 50px;
+  }
+  .badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    border: 1px solid;
+    cursor: default;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .badge:hover { transform: translateY(-2px); }
+  .badge.blue   { color:var(--blue);   border-color:var(--blue);   background:#0a1a2e; }
+  .badge.green  { color:var(--green);  border-color:var(--green);  background:#0a1e14; }
+  .badge.purple { color:var(--purple); border-color:var(--purple); background:#130a2e; }
+  .badge.gold   { color:var(--gold);   border-color:var(--gold);   background:#1e1a0a; }
+  .badge.pink   { color:var(--pink);   border-color:var(--pink);   background:#1e0a14; }
+  .badge.cyan   { color:var(--cyan);   border-color:var(--cyan);   background:#0a1e1e; }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .section-title h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    letter-spacing: 4px;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .section-title .line {
+    width: 60px; height: 2px;
+    background: linear-gradient(90deg, var(--purple), var(--blue));
+    margin: 0 auto;
+  }
+
+  /* ── AGENT GRID ── */
+  .agents-section { padding: 0 40px 60px; max-width: 1100px; margin: 0 auto; }
+
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .agent-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .agent-card::before {
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0;
+    height: 2px;
+    background: var(--accent, var(--purple));
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+  }
+  .agent-card:hover::before,
+  .agent-card.active::before { transform: scaleX(1); }
+  .agent-card:hover,
+  .agent-card.active {
+    transform: translateY(-4px);
+    border-color: var(--accent, var(--purple));
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px var(--glow, #9b59ff33);
+  }
+
+  .agent-icon { font-size: 24px; margin-bottom: 10px; }
+  .agent-type {
+    font-size: 7px;
+    letter-spacing: 3px;
+    color: var(--accent, var(--purple));
+    margin-bottom: 6px;
+  }
+  .agent-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .agent-desc {
+    font-size: 9px;
+    color: #556677;
+    line-height: 1.6;
+  }
+  .agent-tools {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .tool-tag {
+    font-size: 7px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #0a0f1e;
+    color: #445566;
+    border: 1px solid #1a2030;
+    letter-spacing: 1px;
+  }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 16px;
+    min-height: 80px;
+    transition: opacity 0.3s;
+  }
+  .detail-panel h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #fff;
+  }
+  .detail-panel p {
+    font-size: 10px;
+    color: #667788;
+    line-height: 1.8;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── FLOW SECTION ── */
+  .flow-section { padding: 0 40px 60px; max-width: 1100px; margin: 0 auto; }
+
+  .flow-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 20px 0;
+  }
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    animation: stepIn 0.5s ease forwards;
+  }
+  .flow-step:nth-child(1)  { animation-delay: 0.1s; }
+  .flow-step:nth-child(3)  { animation-delay: 0.3s; }
+  .flow-step:nth-child(5)  { animation-delay: 0.5s; }
+  .flow-step:nth-child(7)  { animation-delay: 0.7s; }
+  .flow-step:nth-child(9)  { animation-delay: 0.9s; }
+  .flow-step:nth-child(11) { animation-delay: 1.1s; }
+
+  @keyframes stepIn {
+    from { opacity:0; transform:translateY(10px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .flow-box {
+    width: 100px; height: 56px;
+    border-radius: 8px;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    font-size: 9px;
+    letter-spacing: 1px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+  }
+  .flow-box:hover { transform:scale(1.05); }
+  .flow-box b { font-size: 11px; font-family:'Syne',sans-serif; }
+  .flow-box span { font-size:7px; opacity:0.5; margin-top:2px; }
+
+  .flow-arrow {
+    width: 30px; height: 2px;
+    position: relative;
+    display:flex; align-items:center;
+  }
+  .flow-arrow::after {
+    content:'▶';
+    font-size:8px;
+    position:absolute; right:-2px;
+  }
+
+  /* ── INFRA SECTION ── */
+  .infra-section { padding: 0 40px 60px; max-width: 1100px; margin: 0 auto; }
+  .infra-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .infra-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .infra-card:hover { transform: translateY(-2px); border-color: #2a3040; }
+  .infra-card-title {
+    font-size: 8px;
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+  }
+  .infra-item {
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:8px; font-size:10px; color:#8899aa;
+  }
+  .infra-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align:center;
+    padding:30px;
+    font-size:9px;
+    letter-spacing:3px;
+    color:#223344;
+    border-top:1px solid #0d1520;
+  }
+  footer a { color:#334455; text-decoration:none; }
+  footer a:hover { color:#4a9eff; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">SYSTEM OVERVIEW</div>
+  <h1 class="hero-title">Track <span>Insight</span></h1>
+  <p class="hero-sub">MULTI-AGENT AI PLATFORM  ·  AWS ECS / EKS  ·  GOOGLE ADK</p>
+  <div class="badges">
+    <span class="badge purple">GOOGLE ADK</span>
+    <span class="badge purple">GEMINI 1.5</span>
+    <span class="badge green">NODE.JS</span>
+    <span class="badge green">PYTHON FASTAPI</span>
+    <span class="badge blue">VUE.JS</span>
+    <span class="badge gold">POSTGRESQL</span>
+    <span class="badge gold">PGVECTOR</span>
+    <span class="badge cyan">TERRAFORM</span>
+    <span class="badge cyan">AWS ECS</span>
+    <span class="badge cyan">EKS</span>
+    <span class="badge pink">GITHUB ACTIONS</span>
+    <span class="badge blue">DOCKER</span>
+  </div>
+</section>
+
+<!-- AGENTS -->
+<section class="agents-section">
+  <div class="section-title"><h2>AGENT SYSTEM</h2><div class="line"></div></div>
+  <div class="agents-grid" id="agentsGrid">
+
+    <div class="agent-card" style="--accent:var(--purple);--glow:#9b59ff33" onclick="showDetail('coordinator')">
+      <div class="agent-icon">🎯</div>
+      <div class="agent-type">ORCHESTRATOR</div>
+      <div class="agent-name">Coordinator</div>
+      <div class="agent-desc">Routes user intent to the right specialist agent based on message context.</div>
+      <div class="agent-tools"><span class="tool-tag">intent routing</span><span class="tool-tag">delegation</span></div>
+    </div>
+
+    <div class="agent-card" style="--accent:var(--violet);--glow:#7a4aff33" onclick="showDetail('triage')">
+      <div class="agent-icon">🔍</div>
+      <div class="agent-type">SPECIALIST</div>
+      <div class="agent-name">Issue Manager</div>
+      <div class="agent-desc">Triages new issues — assigns priority, category, and suggested owner from DB history.</div>
+      <div class="agent-tools"><span class="tool-tag">get_issue</span><span class="tool-tag">list_issues</span><span class="tool-tag">create_summary</span></div>
+    </div>
+
+    <div class="agent-card" style="--accent:var(--blue);--glow:#4a9eff33" onclick="showDetail('search')">
+      <div class="agent-icon">🌐</div>
+      <div class="agent-type">SPECIALIST</div>
+      <div class="agent-name">Search Agent</div>
+      <div class="agent-desc">Queries the web for relevant solutions, documentation, and known bug reports.</div>
+      <div class="agent-tools"><span class="tool-tag">google_search</span><span class="tool-tag">source URLs</span></div>
+    </div>
+
+    <div class="agent-card" style="--accent:var(--green);--glow:#4aff9e33" onclick="showDetail('resolution')">
+      <div class="agent-icon">⚙️</div>
+      <div class="agent-type">SPECIALIST</div>
+      <div class="agent-name">Resolution</div>
+      <div class="agent-desc">Produces structured fix plans combining DB history, similar past issues, and web search.</div>
+      <div class="agent-tools"><span class="tool-tag">get_similar</span><span class="tool-tag">search_solutions</span><span class="tool-tag">root cause</span></div>
+    </div>
+
+    <div class="agent-card" style="--accent:var(--pink);--glow:#ff4a9e33" onclick="showDetail('validator')">
+      <div class="agent-icon">✅</div>
+      <div class="agent-type">QA AGENT</div>
+      <div class="agent-name">Validator</div>
+      <div class="agent-desc">Reviews outputs, checks required fields, and triggers self-correction loops on failure.</div>
+      <div class="agent-tools"><span class="tool-tag">validate_triage</span><span class="tool-tag">validate_resolution</span><span class="tool-tag">↺ retry</span></div>
+    </div>
+
+  </div>
+
+  <div class="detail-panel" id="detailPanel">
+    <p style="color:#334455; text-align:center; letter-spacing:2px; font-size:9px;">CLICK AN AGENT TO SEE DETAILS</p>
+  </div>
+</section>
+
+<!-- FLOW -->
+<section class="flow-section">
+  <div class="section-title"><h2>REQUEST FLOW</h2><div class="line"></div></div>
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="flow-box" style="background:#0d1520;border:1px solid var(--blue);color:var(--blue)">
+        <b>User</b><span>Chat UI</span>
+      </div>
+    </div>
+    <div class="flow-arrow" style="color:var(--blue)"></div>
+    <div class="flow-step">
+      <div class="flow-box" style="background:#0d1a14;border:1px solid var(--green);color:var(--green)">
+        <b>Backend</b><span>Node.js</span>
+      </div>
+    </div>
+    <div class="flow-arrow" style="color:var(--purple)"></div>
+    <div class="flow-step">
+      <div class="flow-box" style="background:#130d1a;border:1px solid var(--purple);color:var(--purple)">
+        <b>Coordinator</b><span>Routes</span>
+      </div>
+    </div>
+    <div class="flow-arrow" style="color:var(--violet)"></div>
+    <div class="flow-step">
+      <div class="flow-box" style="background:#0f0d1a;border:1px solid var(--violet);color:var(--violet)">
+        <b>Specialist</b><span>Agent</span>
+      </div>
+    </div>
+    <div class="flow-arrow" style="color:var(--pink)"></div>
+    <div class="flow-step">
+      <div class="flow-box" style="background:#160d14;border:1px solid var(--pink);color:var(--pink)">
+        <b>Validator</b><span>QA Check</span>
+      </div>
+    </div>
+    <div class="flow-arrow" style="color:var(--green)"></div>
+    <div class="flow-step">
+      <div class="flow-box" style="background:#0d1520;border:1px solid var(--blue);color:var(--blue)">
+        <b>Response</b><span>to User</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INFRA -->
+<section class="infra-section">
+  <div class="section-title"><h2>INFRASTRUCTURE</h2><div class="line"></div></div>
+  <div class="infra-grid">
+
+    <div class="infra-card">
+      <div class="infra-card-title" style="color:var(--cyan)">AWS / ECS FARGATE</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--cyan)"></div>VPC + Subnets + Security Groups</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--cyan)"></div>ECS Fargate Tasks + Services</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--cyan)"></div>Application Load Balancer</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--cyan)"></div>RDS PostgreSQL + ECR</div>
+    </div>
+
+    <div class="infra-card">
+      <div class="infra-card-title" style="color:var(--blue)">AWS / EKS KUBERNETES</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--blue)"></div>EKS Cluster + Node Groups</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--blue)"></div>Kubernetes Manifests + Ingress</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--blue)"></div>Horizontal Pod Autoscaling</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--blue)"></div>ConfigMaps + Secrets</div>
+    </div>
+
+    <div class="infra-card">
+      <div class="infra-card-title" style="color:var(--gold)">TERRAFORM IaC</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--gold)"></div>60+ AWS resources provisioned</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--gold)"></div>Modular workspace structure</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--gold)"></div>Remote state management</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--gold)"></div>Environment-based configs</div>
+    </div>
+
+    <div class="infra-card">
+      <div class="infra-card-title" style="color:var(--pink)">CI / CD PIPELINE</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--pink)"></div>GitHub Actions workflows</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--pink)"></div>AWS CodePipeline integration</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--pink)"></div>126 automated tests</div>
+      <div class="infra-item"><div class="infra-dot" style="background:var(--pink)"></div>Docker multi-stage builds</div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <p>TRACK INSIGHT &nbsp;·&nbsp; <a href="#">GitHub</a> &nbsp;·&nbsp; BUILT WITH GOOGLE ADK + CLAUDE CODE</p>
+</footer>
+
+<script>
+const details = {
+  coordinator: {
+    title: '🎯 Coordinator Agent',
+    text: 'The entry point for all agent interactions. Receives user messages from the Node.js backend via POST /api/agents/chat and delegates to the appropriate specialist based on intent detection. Uses a singleton Runner pattern to avoid re-initialization overhead per request. All sub-agent calls are awaited within the coordinator\'s tool functions, maintaining a clean one-way dependency chain with no circular imports.'
+  },
+  triage: {
+    title: '🔍 Issue Manager Agent',
+    text: 'Specializes in understanding and categorizing new issues. Uses three async DB tools — get_issue(), list_issues(), and create_issue_summary() — to pull live context from PostgreSQL before making triage decisions. ADK generates JSON schemas automatically from typed Python function signatures and docstrings. Outputs: priority, category, suggested assignee with rationale.'
+  },
+  search: {
+    title: '🌐 Search Agent',
+    text: 'Wraps Google\'s built-in ADK search tool to find relevant documentation, Stack Overflow answers, and known bug reports for any given issue. Constructs focused search queries by combining the issue title with a truncated description excerpt. Always returns a structured markdown response with a summary and source URLs. No custom DB tools — pure web context retrieval.'
+  },
+  resolution: {
+    title: '⚙️ Resolution Agent',
+    text: 'The most complex agent in the system. Orchestrates three tool calls in sequence: get_issue_details() for the full DB record, get_similar_issues() which surfaces resolved/closed issues first as most actionable, and search_for_solutions() which internally delegates to the Search Agent. Produces a structured markdown plan with Root Cause Analysis, Similar Past Issues, Suggested Fix, and References sections.'
+  },
+  validator: {
+    title: '✅ Validator Agent',
+    text: 'A QA layer that sits between specialist agents and the final response. Uses fast, deterministic string checks — no I/O, no model calls — to verify required fields are present. On failure, builds a correction prompt with specific missing fields and re-runs the originating agent. Lazy imports inside function bodies prevent circular dependencies. Max 2 correction attempts before graceful degradation with a ⚠️ warning appended.'
+  }
+};
+
+function showDetail(key) {
+  const d = details[key];
+  const panel = document.getElementById('detailPanel');
+  panel.innerHTML = `<h3>${d.title}</h3><p>${d.text}</p>`;
+  panel.style.opacity = '0';
+  setTimeout(() => panel.style.opacity = '1', 50);
+
+  document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>
