@@ -8,6 +8,7 @@
 ![Track Insight Architecture](docs/track-insight-architecture.svg)
 
 → **[Interactive Architecture](docs/track-insight-interactive.html)** · **[Architecture Decisions](docs/decisions/)** · **[Medium Article](#)**
+→ **[Interactive Architecture](docs/track-insight-interactive.html)** · **[Architecture Decisions](docs/decisions/)** · **[HashNode Article](https://rdalal.hashnode.dev/rdalal-notes)**
 
 ## Stack
 
