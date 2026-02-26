@@ -1,10 +1,13 @@
 # Track Insight
 
-> Enterprise issue tracking platform with a Google ADK multi-agent system — autonomous triage, resolution planning, and self-correcting quality assurance.
+> Enterprise issue tracking platform with an AI-native architecture. A Google ADK multi-agent system handles autonomous triage, resolution planning, and self-correcting quality assurance. Deployed across AWS ECS Fargate and EKS with Terraform IaC, Docker, and GitHub Actions CI/CD.
 
 [![CI](https://github.com/renuka-dalal/ticket-insight/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/renuka-dalal/ticket-insight/actions)
 [![Release](https://github.com/renuka-dalal/ticket-insight/actions/workflows/release.yml/badge.svg)](https://github.com/renuka-dalal/ticket-insight/releases)
 
+![Track Insight Architecture](docs/track-insight-architecture.svg)
+
+→ **[Interactive Architecture](docs/track-insight-interactive.html)** · **[Architecture Decisions](docs/decisions/)** · **[Medium Article](#)**
 → **[Interactive Architecture](docs/track-insight-interactive.html)** · **[Architecture Decisions](docs/decisions/)** · **[HashNode Article](https://rdalal.hashnode.dev/rdalal-notes)**
 
 ## Stack
@@ -66,6 +69,8 @@ POST  /api/agents/search   Search Agent
 | **AWS ECS Fargate** | Production path via GitHub Actions + AWS CodePipeline · [Screenshots](docs/aws-deployment/screenshots/ecs-deployment/) |
 | **AWS EKS** | Kubernetes deployment via `k8s-manifests/` · [Screenshots](docs/aws-deployment/screenshots/eks-deployment/) |
 
+> *Note: AWS deployments are for demonstration purposes and are not currently live. See [screenshots](docs/aws-deployments/) and Terraform configurations in the repo.*
+
 ---
 
 ## Infrastructure
@@ -98,4 +103,10 @@ Deployed on AWS in two configurations — see [ADR-001](docs/decisions/001-ecs-v
 | [005](docs/decisions/005-validator-self-correction-pattern.md) | Validator self-correction pattern |
 | [006](docs/decisions/006-multi-agent-over-single-llm.md) | Multi-agent over single LLM call |
 
-![Track Insight Architecture](docs/track-insight-architecture.svg)
+---
+
+## Future Enhancements
+
+- **LLM-based intent routing** — replace keyword matching with a lightweight classification call to route chat messages to the agent service more reliably
+- **LangFuse observability** — agent trace logging and latency monitoring via LangFuse
+
